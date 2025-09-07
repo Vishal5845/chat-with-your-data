@@ -31,6 +31,11 @@ I built an **AI-powered data pipeline** that turns raw sales data into clean tab
    git clone https://github.com/your-username/chat-with-your-data.git
    cd chat-with-your-data
    pip install -r requirements.txt
-2. Load the sample sales data  
+2. Load the sample sales data
+   ``` bash
+   python load_and_query.py
 3. Run the Streamlit app and start chatting with your data
+   ``` bash
+   streamlit run app.py
+
 
