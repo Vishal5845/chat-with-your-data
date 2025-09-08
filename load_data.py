@@ -14,6 +14,6 @@ condb.execute("""
 """)
 
 # Verify the table creation
-result = condb.execute("SELECT * FROM ecommerce").fetchall()
+result = condb.execute("SELECT count(*) FROM ecommerce").fetchall()
 print("Total rows in ecommerce table:", result[0][0])
 print("Data loaded into DuckDB successfully.")
