@@ -55,3 +55,58 @@ print(con.execute("""
                   order by total_revenue
                   """).fetch_df())
 
+
+# Missing values per column
+df = (con.execute("""
+                  select *
+                 from ecommerce""").fetchdf())
+
+
+print("/n Missing values per column:")
+print(df.isnull().sum())
+
+# Duplicate rows
+print("\n Number of duplicate rows:")
+print(df.duplicated().sum())
+print(con.execute(""" select count(*) from 
+      (select *, count(*) as cnt 
+      from ecommerce
+      group by all
+      having count(*) >1
+      )"""
+    ).fetchone()[0])
+
+# Negtive entries
+print("\n Number of rows with negative quantity or unit price:")
+print(con.execute("""
+                  select count(*) as Negative_Entries
+                  from ecommerce
+                  where quantity < 0 or unitprice < 0
+                  """).fetch_df())
+
+
+#Top 10 customers by revenue
+print("\n Top 10 customers by revenue:")
+print(con.execute("""
+                  select customerid, round(sum( quantity * UnitPrice), 2) as total_revenue
+                  from ecommerce
+                  group by customerid
+                  order by total_revenue desc
+                  limit 10
+                  """).fetch_df())
+
+
+# Average order value per customer (AOV)
+print("\n Average order value per customer (AOV):")
+print(con.execute("""
+                  select customerid, avg(order_value) as AOV
+                  from (
+                  select customerid, invoiceno, round(sum(quantity * UnitPrice), 2) as order_value
+                  from ecommerce
+                  group by customerid, invoiceno
+                  )
+                  group by customerid
+                  order by AOV desc
+                  limit 10
+                  """).fetch_df())
+
