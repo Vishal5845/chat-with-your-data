@@ -58,3 +58,17 @@ plt.savefig('reports/rfm_heatmap.png')
 # Save to CSV
 rfm.to_csv("reports/rfm_scores.csv", index=False)
 print("RFM scores saved to reports/rfm_scores.csv")
+
+def segment(row):
+    if row["RFM_Score"] == "444":
+        return "Champions"
+    elif row["R_Quartile"] == 4 and row["F_Quartile"] >= 3:
+        return "Loyal"
+    elif row["R_Quartile"] == 1 and row["F_Quartile"] == 1:
+        return "Lost"
+    else:
+        return "Others"
+    
+
+rfm["Segment"] = rfm.apply(segment, axis=1)
+# print(rfm[["CustomerID", "RFM_Score", "Segment"]].head(10))
