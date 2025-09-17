@@ -1,41 +1,71 @@
-# Chat With Your Data 🤖📊  
+# Chat with Your Data (E-commerce Analysis)
 
-Have you ever looked at a messy sales Excel file and wished you could just *ask it a question* like:  
-> "What were my top 5 products last month?"  
-
-That’s exactly what this project does.  
-
-I built an **AI-powered data pipeline** that turns raw sales data into clean tables, and then lets you **chat with your data in plain English**.  
+This project explores an **E-commerce dataset** using **DuckDB + Python** for analysis and visualization.  
+We apply **EDA (Exploratory Data Analysis)** and **RFM (Recency, Frequency, Monetary) segmentation** to understand customer behavior.
 
 ---
 
-## ✨ What it Does
-- Load raw CSV sales data into a local database (DuckDB).  
-- Clean and organize the data with **dbt** (think "data modeling for analytics").  
-- Ask questions in natural language → AI converts them into SQL queries.  
-- See answers instantly in a simple **Streamlit app** (tables + charts).  
+## 📂 Project Structure
+chat-with-your-data/
+│── data/ # Raw dataset (CSV)
+│── src/ # Python scripts (EDA, RFM, etc.)
+│── reports/ # Generated plots & outputs
+│── README.md # Project documentation
+│── requirements.txt # Dependencies
+
 
 ---
 
-## 🛠️ Tech Behind It
-- **DuckDB** → lightweight, free database (like SQLite but built for analytics).  
-- **dbt** → transformations + tests to make data reliable.  
-- **LangChain + Hugging Face** → LLM agent that turns text → SQL.  
-- **Streamlit** → clean, interactive chat UI.  
+## 📊 Exploratory Data Analysis (EDA)
+
+- Checked missing values & duplicates
+- Revenue trends
+- Customer purchase behavior
+
+**Histograms of RFM Metrics:**
+
+![RFM Histograms](reports/rfm_histograms.png)
 
 ---
 
-## 🚀 How to Try It
-1. Clone this repo & install requirements:
-   ```bash
-   git clone https://github.com/your-username/chat-with-your-data.git
-   cd chat-with-your-data
-   pip install -r requirements.txt
-2. Load the sample sales data
-   ``` bash
-   python load_and_query.py
-3. Run the Streamlit app and start chatting with your data
-   ``` bash
-   streamlit run app.py
+## 👥 Customer Segmentation (RFM Analysis)
 
+We segmented customers into groups such as:
+- **Loyal** (frequent buyers, high spenders)
+- **Lost** (haven’t purchased recently)
+- **Potential** (recently active, but not yet frequent)
+- **Others**
+
+**Customer Segment Distribution:**
+
+![Customer Segments](reports/rfm_segments_distribution.png)
+
+---
+
+## 🚀 Next Steps
+- Build **LLM-powered assistant** to query data
+- Deploy interactive dashboards
+
+---
+
+## Requirements
+- Python 3.9+
+- DuckDB
+- Pandas
+- Matplotlib / Seaborn
+
+---
+
+## ⚙️ Setup Instructions
+```bash
+# Create virtual environment
+python -m venv virtual
+source virtual/bin/activate   # (Mac/Linux)
+virtual\Scripts\activate      # (Windows)
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Run EDA
+python src/eda.py
 

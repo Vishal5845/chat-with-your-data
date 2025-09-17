@@ -72,3 +72,7 @@ def segment(row):
 
 rfm["Segment"] = rfm.apply(segment, axis=1)
 # print(rfm[["CustomerID", "RFM_Score", "Segment"]].head(10))
+
+con.execute("drop table if exists rfm")
+con.execute("Create table if not exists rfm as select * from rfm")
+print("RFM table created in DuckDB")
