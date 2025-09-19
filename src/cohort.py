@@ -46,13 +46,13 @@ cohort_norm = cohort_pivot.divide(cohort_pivot.iloc[:, 0], axis=0)
 cohort_norm = cohort_pivot.div(cohort_pivot.apply(lambda row: row[row.first_valid_index()], axis=1), axis=0)
 
 # CSV Export
-cohort_norm.to_csv("reports/cohot_analysis.csv")
+cohort_norm.to_csv("data/processed/cohot_analysis.csv")
 
 
 plt.figure(figsize=(12, 6))
 sns.heatmap(cohort_norm, annot=True, fmt=".0%", cmap="Blues")
 plt.title('Cohort Analysis - Customer Retention')
-plt.savefig("data/processed/cohort_analysis.png")
+plt.savefig("reports/cohort_analysis.png")
 
 # first_orders = con.execute("""
 #     select strftime(min(strptime(Invoicedate, '%m/%d/%Y %H:%M')), '%Y-%m') as first_month,
