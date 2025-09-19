@@ -42,6 +42,16 @@ We segmented customers into groups such as:
 
 ---
 
+## 📊 Cohort Analysis
+We grouped customers by their first purchase month and tracked how many returned in following months.
+
+- `src/cohort_analysis.py` generates the cohort retention matrix.
+- `reports/cohort_heatmap.png` visualizes retention.
+
+This helps identify if newer customers are staying longer or dropping off.
+
+---
+
 ## 🚀 Next Steps
 - Build **LLM-powered assistant** to query data
 - Deploy interactive dashboards
