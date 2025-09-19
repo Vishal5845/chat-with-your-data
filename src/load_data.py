@@ -2,7 +2,7 @@ import pandas as pd
 import duckdb as ddb
 
 # Read the csv file into a pandas DataFrame
-df = pd.read_csv('data/data.csv', encoding='latin1')
+df = pd.read_csv('data/raw/data.csv', encoding='latin1')
 
 # Connect to DuckDB (in-memory)
 condb = ddb.connect("ai_assistant.duckdb")

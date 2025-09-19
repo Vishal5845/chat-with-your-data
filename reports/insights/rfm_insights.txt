@@ -1,0 +1,7 @@
+RFM Analysis Insights:
+
+1. The majority of customers fall into the "Lost Customers" and "At Risk" categories, meaning they haven’t purchased recently.
+2. A smaller group of "Loyal Customers" drive a significant share of revenue due to frequent purchases.
+3. "New Customers" are visible but their monetary value is relatively low compared to Loyal Customers.
+4. Monetary distribution is highly skewed: a few customers contribute most of the sales.
+5. Customer segmentation shows potential for targeted campaigns (e.g., reactivation for Lost Customers, rewards for Loyal Customers).

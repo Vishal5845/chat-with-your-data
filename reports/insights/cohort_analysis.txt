@@ -1,0 +1,7 @@
+Cohort Analysis Insights:
+
+1. Customer retention is strongest in the first 2–3 months after acquisition.
+2. The December 2010 cohort was the largest, but it experienced a steady decline in retention over time.
+3. Some smaller cohorts (e.g., early 2011) retained customers slightly better at 3–4 months.
+4. Overall, most customers churn within the first 6 months, suggesting the need for better engagement strategies.
+5. Retention improvements in later months would significantly impact recurring revenue.

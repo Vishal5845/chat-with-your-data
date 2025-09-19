@@ -56,7 +56,7 @@ plt.savefig('reports/rfm_heatmap.png')
 # plt.show()
 
 # Save to CSV
-rfm.to_csv("reports/rfm_scores.csv", index=False)
+rfm.to_csv("data/processed/rfm_scores.csv", index=False)
 print("RFM scores saved to reports/rfm_scores.csv")
 
 def segment(row):
