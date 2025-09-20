@@ -42,13 +42,3 @@ plt.gca().invert_yaxis()
 plt.tight_layout()
 plt.savefig("reports/top_products_by_revenue.png")
 plt.close()
-
-# Summary Statistics
-summary = con.execute("""
-    SELECT count(distinct CustomerId) AS TotalCustomers,
-           count(distinct stockcode) AS TotalProducts,
-           sum(quantity * unitprice) AS Total_Revenue
-    from ecommerce
-""").fetchdf()
-
-summary.to_csv("data/processed/summary_statistics.csv", index=False)
