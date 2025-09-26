@@ -1,55 +1,138 @@
 import pandas as pd
+import re
+import matplotlib.pyplot as plt
 import os
+
+# Load all summaries
+
+summary = pd.read_csv("data/processed/summary.csv").to_dict(orient="records")[0]
+countries = pd.read_csv("data/processed/countries_revenue.csv")
+products = pd.read_csv("data/processed/products_revenue.csv")
+
 
 class QAPrototype:
     def __init__ (self, summary_folder = "data/processed"):
         self.summary_folder = summary_folder
-    
-    def get_file_path(self, query_type):
-        """ Map query types to file paths """
-        mapping = {
-            "countries by revenue" : "countries_revenue.csv",
-            "products by revenue" : "products_revenue.csv",
-            "total customers" : "summary.csv",
-            "total revenue" : "summary.csv"
-        }
-        file_name = mapping.get(query_type.lower())
-        if not file_name:
-            raise ValueError(f"No CSV mapping found for query '{query_type}'")
-        file_path = os.path.join(self.summary_folder, file_name)
-        if not os.path.exists(file_path):
-            raise FileNotFoundError(f"File '{file_path}' does not exist.")
-        return file_path
-    
-    def load_csv(self, query_type):
-        """ Load CSV file into DataFrame """
-        file_path = self.get_file_path(query_type)
-        return pd.read_csv(file_path)
-    
-    def top_n(self, query_type, n=None, value_col = None, name_col = None):
-        df = self.load_csv(query_type)
-        if value_col and value_col in df.columns:
-            df_sort = df.sort_values(value_col, ascending=False).head(n)
-        else:
-            df_sort = df.head(n)
-        
-        return df_sort[[name_col, value_col]] if name_col and value_col else df_sort
-    
-    def preety_print(self, query_type, n=None, value_col = None, name_col = None):
-        df_top = self.top_n(query_type, n, value_col, name_col)
 
-        if name_col and value_col:
-            print(f"Top {n} {query_type.title()}")
-            print("-"*30)
-            for _,row in df_top.iterrows():
-                if value_col and name_col:
-                    print(f"{row[name_col]}\t${row[value_col]:,}")
+        # Synonyms for query types
+        self.queries = {
+            "customers": ["customer", "customers", "users", "buyers"],
+            "revenue": ["revenue", "sales", "income"],
+            "countries": ["country", "countries", "nation", "region"],
+            "products": ["product", "products", "item", "sku"],
+            "monthly_revenue": ["monthly revenue", "sales trend", "trend"]
+        }
+
+        # Metadata defines CSV, columns, and behavior for each category
+        self.metadata = {
+            "customers" :{
+                "file": "summary.csv",
+                "name_col": None,
+                "value_col": "Total Customers",
+                "top_n": False,
+                "plot": False
+            },
+            "revenue" :{
+                "file": "summary.csv",
+                "name_col": None,
+                "value_col": "Total Revenue",
+                "top_n": False,
+                "plot": False
+            },
+            "countries" :{
+                "file": "countries_revenue.csv",
+                "name_col": "Country",
+                "value_col": "Revenue",
+                "top_n": True,
+                "plot": True
+            },
+            "products" :{
+                "file": "products_revenue.csv",
+                "name_col": "Description",
+                "value_col": "Revenue",
+                "top_n": True,
+                "plot": True
+            },
+            "monthly_revenue" :{
+                "file": "monthly_revenue.csv",
+                "name_col": "YearMonth",
+                "value_col": "Revenue",
+                "top_n": False,
+                "plot": True
+            }
+        }
+    
+    def detect_category(self, query: str):
+        """Detect category using synonyms."""
+        q = query.lower()
+        for cat, words in self.queries.items():
+            if any(i in q for i in words):
+                return cat
+        return None
+    
+    def extract_top_n(self, query:str, default=5):
+        """Extract Top N from query, default=5."""
+        match = re.search(r"\btop\s*(\d+)", query.lower())
+        return int(match.group(1)) if match else default
+    
+    def load_csv(self, category):
+        """ Load CSV file into DataFrame """
+        meta = self.metadata[category]
+        file_path = os.path.join(self.summary_folder, meta["file"])
+        if not os.path.exists(file_path):
+            raise FileNotFoundError(f"CSV file not found: {file_path}")
+        return pd.read_csv(file_path)    
+    
+    def display(self, category, query=None):
+        print(query)
+        meta = self.metadata[category]
+        df = self.load_csv(category)
+        
+        # Determine top N 
+        n = self.extract_top_n(query) if meta["top_n"] and query else None
+        if meta['top_n'] and n:
+            df = df.sort_values(meta["value_col"], ascending=False).head(n)
+
+        # Plot if true
+        if meta["plot"]:
+            if meta["name_col"] not in df.columns or meta["value_col"] not in df.columns:
+                print("CSV must have the required columns for plotting.")
+                return
+            
+            name_col = meta["name_col"]
+            value_col = meta["value_col"]
+            # try converting to datetime safely
+            try:
+                df[name_col] = pd.to_datetime(df[name_col], format="%Y-%m")
+            except Exception:
+                pass
+
+            # Print the table first
+            print(f"\n{category.replace('_',' ').title()}")
+            print("-" * 40)
+            print(df.to_string(index=False))
+
+            df.plot(x=name_col, y=value_col, kind="line", marker="o")
+            plt.title(f"{category.replace('_',' ').title()} Trend")
+            plt.ylabel(value_col)
+            plt.xlabel(name_col)
+            plt.tight_layout()
+            plt.show()
+            return
+        
+        # Top N display
+        if meta["top_n"] and n:
+            print(f"\nTop {n} {category.replace('_', ' ').title()}")
+            print("-"*40)
+            for _, r in df.iterrows():
+                print(f"{r[meta['name_col']]:<25} ${r[meta['value_col']]:,}")
         else:
-            if query_type.lower() == "total customers":
-                print(f"Total Customers: {int(df_top.iloc[0]['Total Customers']):,}")
-            else:
-                for _, row in df_top.iterrows():
-                    print({i.title(): row[i] for i in df_top.columns})
+            # Single value display
+            print(f"{meta['value_col']}: {df.iloc[0][meta['value_col']]:,}")
+    
+    def fallback_response(self):
+        print("Sorry, I don’t know how to answer that yet.")
+        print("Try asking about customers, revenue, countries, products, or monthly trends.")
     
     def run_interactive(self):
         print("Welcome to QA Prototype! Type 'exit' to quit.")
@@ -60,34 +143,13 @@ class QAPrototype:
                 break
 
             try:
-                n = None
-                if "top" in query:
-                    parts = query.split()
-                    try:
-                        idx = parts.index("top")
-                        n = int(parts[idx+1])
-                    except (ValueError, IndexError):
-                        n = 5
-                
-                if "country" in query:
-                    query_type = "countries by revenue"
-                    value_col = "Revenue"
-                    name_col = "Country"
-                elif "product" in query:
-                    query_type = "products by revenue"
-                    value_col = "Revenue"
-                    name_col = "Description"
-                elif "customer" in query:
-                    query_type = "total customers"
-                    value_col = None
-                    name_col = None
-                else:
-                    print("Sorry, I can't understand that query.")
+                cat = self.detect_category(query)
+                if not cat:
+                    self.fallback_response()
                     continue
-
-                self.preety_print(query_type, n, value_col, name_col)
+                self.display(cat, query)
             except Exception as e:
-                print(e)
+                print(f"⚠️ Error: {e}")
 
 
 if __name__ == "__main__":

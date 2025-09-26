@@ -29,4 +29,15 @@ country_revenue.to_csv("data/processed/countries_revenue.csv", index=False)
 product_revenue = df.groupby("Description")["Revenue"].sum().reset_index().sort_values(by="Revenue", ascending=False).reset_index(drop=True)
 product_revenue.to_csv("data/processed/products_revenue.csv", index=False)
 
+# Monthly Revenue
+# Convert InvoiceDate to datetime
+df["InvoiceDate"] = pd.to_datetime(df["InvoiceDate"], format = "%m/%d/%Y %H:%M")
+
+# Extract year-month
+df["YearMonth"] = df["InvoiceDate"].dt.to_period("M").astype(str)
+
+# group by year month and sum revenue
+monthly_revenue = df.groupby("YearMonth")["Revenue"].sum().reset_index().sort_values(by="YearMonth")
+monthly_revenue.to_csv("data/processed/monthly_revenue.csv", index=False)
+
 print("✅ Summary files generated in data/processed/")
