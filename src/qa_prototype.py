@@ -13,6 +13,9 @@ products = pd.read_csv("data/processed/products_revenue.csv")
 class QAPrototype:
     def __init__ (self, summary_folder = "data/processed"):
         self.summary_folder = summary_folder
+        os.makedirs("reports/plots", exist_ok=True)
+        os.makedirs("logs", exist_ok=True)
+        self.log_file = "logs/qa_log.txt"
 
         # Synonyms for query types
         self.queries = {
@@ -84,7 +87,7 @@ class QAPrototype:
         return pd.read_csv(file_path)    
     
     def display(self, category, query=None):
-        print(query)
+        print(f"\n🔎 Query: {query}")
         meta = self.metadata[category]
         df = self.load_csv(category)
         
@@ -104,20 +107,30 @@ class QAPrototype:
             # try converting to datetime safely
             try:
                 df[name_col] = pd.to_datetime(df[name_col], format="%Y-%m")
+                is_time_series = True
             except Exception:
-                pass
+                is_time_series = True
 
             # Print the table first
             print(f"\n{category.replace('_',' ').title()}")
             print("-" * 40)
             print(df.to_string(index=False))
 
-            df.plot(x=name_col, y=value_col, kind="line", marker="o")
+            if is_time_series:
+                df.plot(x = name_col, y=value_col, kind="line", marker="o")
+            else:
+                df.plot(x=name_col, y=value_col, kind="bar")
+
             plt.title(f"{category.replace('_',' ').title()} Trend")
             plt.ylabel(value_col)
             plt.xlabel(name_col)
             plt.tight_layout()
+
+            # Save Chart
+            save_path = f"reports/plots/{category}.png"
+            plt.savefig(save_path)
             plt.show()
+            print(f"✅ Plot saved to {save_path}")
             return
         
         # Top N display
@@ -134,6 +147,11 @@ class QAPrototype:
         print("Sorry, I don’t know how to answer that yet.")
         print("Try asking about customers, revenue, countries, products, or monthly trends.")
     
+    def log_query(self, query:str, category: str = None, status:str = "success"):
+        """Log user queries with detected category and status."""
+        with open(self.log_file, 'a') as f:
+            f.write(f"Query: {query} | Category: {category} | Status: {status}\n")
+
     def run_interactive(self):
         print("Welcome to QA Prototype! Type 'exit' to quit.")
         while True:
@@ -146,10 +164,14 @@ class QAPrototype:
                 cat = self.detect_category(query)
                 if not cat:
                     self.fallback_response()
+                    self.log_query(query, None, "fallback")
                     continue
                 self.display(cat, query)
+                self.log_query(query, cat, status="success")
+
             except Exception as e:
                 print(f"⚠️ Error: {e}")
+                self.log_query(query, category="Error", status=str(e))
 
 
 if __name__ == "__main__":

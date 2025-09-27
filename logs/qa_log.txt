@@ -1,0 +1,6 @@
+Query: top 5 products by country | Category: Error | Status: Rectangle.set() got an unexpected keyword argument 'marker'
+Query: top 5 products by revenue | Category: revenue | Status: success
+Query: top 5 products by country | Category: countries | Status: success
+Query: top 5 products | Category: products | Status: success
+Query: total customers | Category: customers | Status: success
+Query: how much revenue did we get from the uk? | Category: revenue | Status: success
