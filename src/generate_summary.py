@@ -40,4 +40,9 @@ df["YearMonth"] = df["InvoiceDate"].dt.to_period("M").astype(str)
 monthly_revenue = df.groupby("YearMonth")["Revenue"].sum().reset_index().sort_values(by="YearMonth")
 monthly_revenue.to_csv("data/processed/monthly_revenue.csv", index=False)
 
+# Transaction summary
+transactions = df[["InvoiceNo", "InvoiceDate", "Country", "Description", "Revenue", "Quantity"]].copy()
+transactions.rename(columns= {"InvoiceNo" : "TransactionID", "InvoiceDate" : "Date"}, inplace=True)
+transactions.to_csv("data/processed/transactions.csv", index=False)
+
 print("✅ Summary files generated in data/processed/")

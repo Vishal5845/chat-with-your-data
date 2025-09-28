@@ -4,3 +4,25 @@ Query: top 5 products by country | Category: countries | Status: success
 Query: top 5 products | Category: products | Status: success
 Query: total customers | Category: customers | Status: success
 Query: how much revenue did we get from the uk? | Category: revenue | Status: success
+Query: top 5 countries | Category: countries | Status: success
+Query: what is the monthly revenue for 2010-11? | Category: revenue | Status: success
+Query: monthly revenue | Category: revenue | Status: success
+Query: monthly revenue | Category: revenue | Status: success
+Query: tren | Category: None | Status: fallback
+Query: trend | Category: monthly_revenue | Status: success
+[2025-09-28 18:17:14] Query: total customers | Category: customers | Status: success
+[2025-09-28 18:17:24] Query: total revenue | Category: revenue | Status: success
+[2025-09-28 18:17:36] Query: top 5 countries | Category: countries | Status: success
+[2025-09-28 18:17:50] Query: top 3 products | Category: products | Status: success
+[2025-09-28 18:17:57] Query: monthly revenue trend | Category: revenue | Status: success
+[2025-09-28 18:18:23] Query: top 5 products in germany | Category: products | Status: success
+[2025-09-28 18:20:20] Query: top 3 products in united kingdom | Category: products | Status: success
+[2025-09-28 18:23:11] Query: top 3 products from germany | Category: products | Status: success
+[2025-09-28 18:24:20] Query: top 3 products from germany | Category: products | Status: success
+[2025-09-28 18:25:46] Query: top 3 products from germany | Category: products | Status: success
+[2025-09-28 22:53:01] Query: top 3 products from germany | Category: products | Status: success
+[2025-09-28 22:55:55] Query: top 3 products from germany | Category: products | Status: success
+[2025-09-28 22:57:03] Query: top 4 products from finland | Category: products | Status: success
+[2025-09-28 23:16:00] Query: top products | Category: products | Status: success
+[2025-09-28 23:16:19] Query: top 5 products in united kingdom | Category: products | Status: success
+[2025-09-28 23:16:38] Query: top 10 products from france | Category: products | Status: success

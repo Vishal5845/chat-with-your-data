@@ -2,6 +2,7 @@ import pandas as pd
 import re
 import matplotlib.pyplot as plt
 import os
+from datetime import *
 
 # Load all summaries
 
@@ -84,7 +85,30 @@ class QAPrototype:
         file_path = os.path.join(self.summary_folder, meta["file"])
         if not os.path.exists(file_path):
             raise FileNotFoundError(f"CSV file not found: {file_path}")
-        return pd.read_csv(file_path)    
+        return pd.read_csv(file_path)
+    
+    def plot_chart(self, df, x_col, y_col, category, chart_type=None):
+        if chart_type is None:
+            print(f"⚠️ No chart type specified for {category}, skipping plot.")
+            return
+        
+        if chart_type == "line":
+            df[x_col] = pd.to_datetime(df[x_col], format="%Y-%m")
+            df.plot(x_col, y_col, kind= "line", marker="o")
+        elif chart_type == "bar":
+            df.plot(x_col, y_col, kind="bar")
+        else:
+            print(f"⚠️ Unknown chart type: {chart_type}")
+            return
+        
+        plt.title(f"{category.replace('_',' ').title()} Trend")
+        plt.ylabel(y_col)
+        plt.xlabel(x_col)
+        plt.tight_layout()
+        save_path = f"reports/plots/{category}.png"
+        plt.savefig(save_path)
+        plt.show()
+        print(f"✅ Plot saved to {save_path}")
     
     def display(self, category, query=None):
         print(f"\n🔎 Query: {query}")
@@ -96,41 +120,37 @@ class QAPrototype:
         if meta['top_n'] and n:
             df = df.sort_values(meta["value_col"], ascending=False).head(n)
 
-        # Plot if true
-        if meta["plot"]:
-            if meta["name_col"] not in df.columns or meta["value_col"] not in df.columns:
-                print("CSV must have the required columns for plotting.")
-                return
-            
-            name_col = meta["name_col"]
-            value_col = meta["value_col"]
-            # try converting to datetime safely
-            try:
-                df[name_col] = pd.to_datetime(df[name_col], format="%Y-%m")
-                is_time_series = True
-            except Exception:
-                is_time_series = True
-
-            # Print the table first
-            print(f"\n{category.replace('_',' ').title()}")
-            print("-" * 40)
-            print(df.to_string(index=False))
-
-            if is_time_series:
-                df.plot(x = name_col, y=value_col, kind="line", marker="o")
+        # Combined Query
+        if "products" in query.lower() and ("country" in query.lower() or "from" in query.lower() or "in" in query.lower()):
+            # print("iside if")
+            country_match = re.search(r"(?:in|from) ([\w\s]+)", query, re.IGNORECASE)
+            # print(country_match)
+            if country_match:
+                country = country_match.group(1).strip().title()
+                print(country)
+                tx_file = os.path.join(self.summary_folder, "transactions.csv")
+                if os.path.exists(tx_file):
+                    tx = pd.read_csv(tx_file)
+                    top_n = self.extract_top_n(query)
+                    df_country = (
+                        tx[tx["Country"] == country]
+                        .groupby("Description")["Revenue"].sum().nlargest(n).reset_index()
+                    )
+                    self.plot_chart(df_country, "Description", "Revenue", f"products_in_{country}", "bar")
+                    print(f"\nTop {top_n} Products in {country}")
+                    print("-"*40)
+                    print(df_country.to_string(index=False))
+                    return
+        
+        # Decide chart type
+        chart_type = None
+        if meta["plot"] :
+            if category == "monthly_revenue":
+                chart_type = "line"
             else:
-                df.plot(x=name_col, y=value_col, kind="bar")
-
-            plt.title(f"{category.replace('_',' ').title()} Trend")
-            plt.ylabel(value_col)
-            plt.xlabel(name_col)
-            plt.tight_layout()
-
-            # Save Chart
-            save_path = f"reports/plots/{category}.png"
-            plt.savefig(save_path)
-            plt.show()
-            print(f"✅ Plot saved to {save_path}")
+                chart_type = "bar"
+            
+            self.plot_chart(df, meta["name_col"], meta["value_col"], category, chart_type)
             return
         
         # Top N display
@@ -149,8 +169,10 @@ class QAPrototype:
     
     def log_query(self, query:str, category: str = None, status:str = "success"):
         """Log user queries with detected category and status."""
+        ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
         with open(self.log_file, 'a') as f:
-            f.write(f"Query: {query} | Category: {category} | Status: {status}\n")
+            f.write(f"[{ts}] Query: {query} | Category: {category} | Status: {status}\n")
 
     def run_interactive(self):
         print("Welcome to QA Prototype! Type 'exit' to quit.")
