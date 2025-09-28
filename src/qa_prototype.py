@@ -24,7 +24,8 @@ class QAPrototype:
             "revenue": ["revenue", "sales", "income"],
             "countries": ["country", "countries", "nation", "region"],
             "products": ["product", "products", "item", "sku"],
-            "monthly_revenue": ["monthly revenue", "sales trend", "trend"]
+            "monthly_revenue": ["monthly revenue", "sales trend", "trend"],
+            "transactions": ["transaction", "transactions", "orders", "purchases"]
         }
 
         # Metadata defines CSV, columns, and behavior for each category
@@ -48,21 +49,31 @@ class QAPrototype:
                 "name_col": "Country",
                 "value_col": "Revenue",
                 "top_n": True,
-                "plot": True
+                "plot": True,
+                "chart_type": "bar"
             },
             "products" :{
                 "file": "products_revenue.csv",
                 "name_col": "Description",
                 "value_col": "Revenue",
                 "top_n": True,
-                "plot": True
+                "plot": True,
+                "chart_type": "bar"
             },
             "monthly_revenue" :{
                 "file": "monthly_revenue.csv",
                 "name_col": "YearMonth",
                 "value_col": "Revenue",
                 "top_n": False,
-                "plot": True
+                "plot": True,
+                "chart_type" : "line"
+            },
+            "transactions" :{
+                "file": "transactions.csv",
+                "name_col": "InvoiceNo",
+                "value_col": "Revenue",
+                "top_n": False,
+                "plot": False
             }
         }
     
@@ -109,6 +120,41 @@ class QAPrototype:
         plt.savefig(save_path)
         plt.show()
         print(f"✅ Plot saved to {save_path}")
+
+    def handle_products_in_country(self, query, n):
+        country_match = re.search(r"(?:in|from) ([\w\s]+)", query, re.IGNORECASE)
+        if country_match:
+            country = country_match.group(1).strip().title()
+            tx_file = os.path.join(self.summary_folder, "transactions.csv")
+            if os.path.exists(tx_file):
+                tx = pd.read_csv(tx_file)
+                top_n = self.extract_top_n(query)
+                df_country = (
+                    tx[tx["Country"] == country]
+                    .groupby("Description")["Revenue"].sum().nlargest(n).reset_index()
+                )
+                self.plot_chart(df_country, "Description", "Revenue", f"products_in_{country}", "bar")
+                print(f"\nTop {top_n} Products in {country}")
+                print("-"*40)
+                print(df_country.to_string(index=False))
+                return True
+        return False
+    
+    def handle_transactions_in_country(self, query):
+        country_match = re.search(r"(?:in|from) ([\w\s]+)", query, re.IGNORECASE)
+        if country_match:
+            country = country_match.group(1).strip().title()
+            tx_file = os.path.join(self.summary_folder, "transactions.csv")
+            if os.path.exists(tx_file):
+                tx = pd.read_csv(tx_file)
+                df_tx = tx[tx["Country"] == country]
+                print(f"\nTransactions in {country}")
+                print("-"*40)
+                print(df_tx.head(10).to_string(index=False))
+                print(f"\nTotal Transactions: {len(df_tx)}")
+                print(f"Total Revenue: {df_tx['Revenue'].sum():,.2f}")
+                return True
+        return False
     
     def display(self, category, query=None):
         print(f"\n🔎 Query: {query}")
@@ -120,39 +166,18 @@ class QAPrototype:
         if meta['top_n'] and n:
             df = df.sort_values(meta["value_col"], ascending=False).head(n)
 
-        # Combined Query
-        if "products" in query.lower() and ("country" in query.lower() or "from" in query.lower() or "in" in query.lower()):
-            # print("iside if")
-            country_match = re.search(r"(?:in|from) ([\w\s]+)", query, re.IGNORECASE)
-            # print(country_match)
-            if country_match:
-                country = country_match.group(1).strip().title()
-                print(country)
-                tx_file = os.path.join(self.summary_folder, "transactions.csv")
-                if os.path.exists(tx_file):
-                    tx = pd.read_csv(tx_file)
-                    top_n = self.extract_top_n(query)
-                    df_country = (
-                        tx[tx["Country"] == country]
-                        .groupby("Description")["Revenue"].sum().nlargest(n).reset_index()
-                    )
-                    self.plot_chart(df_country, "Description", "Revenue", f"products_in_{country}", "bar")
-                    print(f"\nTop {top_n} Products in {country}")
-                    print("-"*40)
-                    print(df_country.to_string(index=False))
-                    return
-        
-        # Decide chart type
-        chart_type = None
-        if meta["plot"] :
-            if category == "monthly_revenue":
-                chart_type = "line"
-            else:
-                chart_type = "bar"
-            
-            self.plot_chart(df, meta["name_col"], meta["value_col"], category, chart_type)
+        # Special Cases
+        if category == "products" and self.handle_products_in_country(query, n):
+            return
+        if category == "transactions" and self.handle_transactions_in_country(query):
             return
         
+        # Decide chart type
+        if meta.get("plot",False):
+            chart_type = meta.get("chart_type")
+            self.plot_chart(df, meta["name_col"], meta["value_col"], category, chart_type)
+            return
+    
         # Top N display
         if meta["top_n"] and n:
             print(f"\nTop {n} {category.replace('_', ' ').title()}")
@@ -184,6 +209,7 @@ class QAPrototype:
 
             try:
                 cat = self.detect_category(query)
+                print(cat)
                 if not cat:
                     self.fallback_response()
                     self.log_query(query, None, "fallback")

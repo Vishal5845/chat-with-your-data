@@ -26,3 +26,13 @@ Query: trend | Category: monthly_revenue | Status: success
 [2025-09-28 23:16:00] Query: top products | Category: products | Status: success
 [2025-09-28 23:16:19] Query: top 5 products in united kingdom | Category: products | Status: success
 [2025-09-28 23:16:38] Query: top 10 products from france | Category: products | Status: success
+[2025-09-28 23:20:38] Query: top products in germany | Category: products | Status: success
+[2025-09-28 23:20:50] Query: top 3 products | Category: products | Status: success
+[2025-09-28 23:21:05] Query: top products | Category: products | Status: success
+[2025-09-28 23:25:23] Query: transactions in germany | Category: None | Status: fallback
+[2025-09-28 23:54:51] Query: transactions in germany | Category: None | Status: fallback
+[2025-09-28 23:56:10] Query: transaction from united kingdom | Category: Error | Status: 'transactions'
+[2025-09-28 23:56:33] Query: transactions for germany | Category: Error | Status: 'transactions'
+[2025-09-28 23:57:08] Query: transaction in germany | Category: Error | Status: 'transactions'
+[2025-09-28 23:59:03] Query: transaction in germany | Category: transactions | Status: success
+[2025-09-29 00:01:08] Query: top 5 products in uk | Category: Error | Status: index 0 is out of bounds for axis 0 with size 0
