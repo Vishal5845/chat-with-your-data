@@ -21,11 +21,11 @@ class QAPrototype:
         # Synonyms for query types
         self.queries = {
             "customers": ["customer", "customers", "users", "buyers"],
-            "revenue": ["revenue", "sales", "income"],
             "countries": ["country", "countries", "nation", "region"],
             "products": ["product", "products", "item", "sku"],
-            "monthly_revenue": ["monthly revenue", "sales trend", "trend"],
-            "transactions": ["transaction", "transactions", "orders", "purchases"]
+            "monthly_revenue": ["monthly revenue", "sales trend", "trend", "revenue by month"],
+            "transactions": ["transaction", "transactions", "orders", "purchases"],
+            "revenue": ["revenue", "sales", "income"]
         }
 
         # Metadata defines CSV, columns, and behavior for each category
@@ -76,14 +76,56 @@ class QAPrototype:
                 "plot": False
             }
         }
-    
+
+        # map common short names/aliases -> canonical country name as in your CSV
+        self.country_map = {
+            "uk": "United Kingdom",
+            "u.k.": "United Kingdom",
+            "gb": "United Kingdom",
+            "great britain": "United Kingdom",
+            "us": "United States",
+            "usa": "United States",
+            "eire": "EIRE",          
+            "ireland": "EIRE",
+        }
+
+        self.category_priority = {
+            "monthly_revenue": 5,
+            "countries": 4,
+            "products": 3,
+            "transactions": 2,
+            "customers": 1,
+            "revenue": 0
+        }
+
+    def normalize_country(self, raw_country:str) -> str:
+        """
+        Normalize a country string from user input to the canonical form
+        used in your CSVs. Uses self.country_map; falls back to title-case.
+        """
+        if not raw_country:
+            return raw_country
+        
+        key = raw_country.strip().lower().replace(".",  "")
+        key = re.sub(r"\s+", " ", key)
+        mapped = self.country_map.get(key)
+        if mapped:
+            return mapped
+        return raw_country.strip().title()
+        
     def detect_category(self, query: str):
         """Detect category using synonyms."""
         q = query.lower()
+        matches = []
         for cat, words in self.queries.items():
             if any(i in q for i in words):
-                return cat
-        return None
+                matches.append((cat, self.category_priority.get(cat,0)))
+        
+        if not matches:
+            return None
+        
+        matches.sort(key= lambda x:x[1], reverse=True)
+        return matches[0][0]
     
     def extract_top_n(self, query:str, default=5):
         """Extract Top N from query, default=5."""
@@ -124,17 +166,23 @@ class QAPrototype:
     def handle_products_in_country(self, query, n):
         country_match = re.search(r"(?:in|from) ([\w\s]+)", query, re.IGNORECASE)
         if country_match:
-            country = country_match.group(1).strip().title()
+            raw = country_match.group(1).strip()
+            country = self.normalize_country(raw)
             tx_file = os.path.join(self.summary_folder, "transactions.csv")
             if os.path.exists(tx_file):
                 tx = pd.read_csv(tx_file)
-                top_n = self.extract_top_n(query)
+                tx_country_norm = tx["Country"].astype(str).str.strip().str.lower()
+                target_norm = country.lower()
+                tx_filter = tx[tx_country_norm == target_norm]
+                if tx_filter.empty:
+                    print(f"⚠️ No transactions found for country: {country}")
+                    return True
                 df_country = (
-                    tx[tx["Country"] == country]
+                    tx_filter
                     .groupby("Description")["Revenue"].sum().nlargest(n).reset_index()
                 )
                 self.plot_chart(df_country, "Description", "Revenue", f"products_in_{country}", "bar")
-                print(f"\nTop {top_n} Products in {country}")
+                print(f"\nTop {n} Products in {country}")
                 print("-"*40)
                 print(df_country.to_string(index=False))
                 return True
@@ -143,16 +191,22 @@ class QAPrototype:
     def handle_transactions_in_country(self, query):
         country_match = re.search(r"(?:in|from) ([\w\s]+)", query, re.IGNORECASE)
         if country_match:
-            country = country_match.group(1).strip().title()
+            raw = country_match.group(1).strip()
+            country = self.normalize_country(raw)
             tx_file = os.path.join(self.summary_folder, "transactions.csv")
             if os.path.exists(tx_file):
                 tx = pd.read_csv(tx_file)
-                df_tx = tx[tx["Country"] == country]
+                tx_country_norm = tx["Country"].astype(str).str.strip().str.lower()
+                target_norm = country.lower()
+                tx_filter = tx[tx_country_norm == target_norm]
+                if tx_filter.empty:
+                    print(f"⚠️ No transactions found for country: {country}")
+                    return True
                 print(f"\nTransactions in {country}")
                 print("-"*40)
-                print(df_tx.head(10).to_string(index=False))
-                print(f"\nTotal Transactions: {len(df_tx)}")
-                print(f"Total Revenue: {df_tx['Revenue'].sum():,.2f}")
+                print(tx_filter.head(10).to_string(index=False))
+                print(f"\nTotal Transactions: {len(tx_filter)}")
+                print(f"Total Revenue: {tx_filter['Revenue'].sum():,.2f}")
                 return True
         return False
     
@@ -190,7 +244,7 @@ class QAPrototype:
     
     def fallback_response(self):
         print("Sorry, I don’t know how to answer that yet.")
-        print("Try asking about customers, revenue, countries, products, or monthly trends.")
+        print("Try asking about customers, revenue, countries, products, transactions, or monthly trends.")
     
     def log_query(self, query:str, category: str = None, status:str = "success"):
         """Log user queries with detected category and status."""
