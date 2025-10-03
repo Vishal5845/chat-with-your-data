@@ -1,0 +1,22 @@
+timestamp,query,category,status,rows,plot,matched_by,exec_time_ms
+2025-10-04 00:08:09,show monthly revenue,monthly_revenue,success,13,yes,synonym, 2992.07
+2025-10-04 00:20:53,revenue by month,monthly_revenue,success,13,yes,regex, 4952.69
+2025-10-04 00:21:00,monthly sales,revenue,success,1,no,synonym, 4.98
+2025-10-04 00:21:08,top 5 countries by revenue,countries_top,'countries_top',,no,, 0.17
+2025-10-04 00:21:41,top 5 products in uk and top 5 products in united kingdom,products_in_country,'products_in_country',,no,, 0.16
+2025-10-04 00:21:49,top 5 products in uk,products_in_country,'products_in_country',,no,, 0.14
+2025-10-04 00:21:56,transactions in germany,transactions,QAPrototype.handle_transactions_in_country() takes 2 positional arguments but 3 were given,,no,, 828.54
+2025-10-04 00:33:15,monthly sales,revenue,success,1,no,synonym, 3.52
+2025-10-04 00:33:49,monthly sales,monthly_revenue,success,13,yes,synonym, 2394.96
+2025-10-04 00:33:57,top 5 countries by revenue,countries_top,'countries_top',,no,, 0.13
+2025-10-04 00:34:50,top 5 countries by revenue,countries,success,38,yes,regex, 3285.67
+2025-10-04 00:35:16,top 5 products in uk and top 5 products in united kingdom,products,success,4223,yes,regex, 17666.48
+2025-10-04 00:36:18,transactions in germany,transactions,success,541909,no,regex, 1855.35
+2025-10-04 00:39:38,transactions in germany,transactions,success,541909,no,regex, 1840.83
+2025-10-04 00:40:23,transactions in germany,transactions,success,541909,no,regex, 1842.92
+2025-10-04 00:40:51,transactions in germany,transactions,success,541909,no,regex, 1845.68
+2025-10-04 00:43:05,transactions in germany,transactions,success,541909,no,regex, 1804.22
+2025-10-04 00:43:37,monthly sales,monthly_revenue,success,13,yes,synonym, 2640.74
+2025-10-04 00:53:23,transaction in uk,transactions,success,541909,no,regex, 2591.82
+2025-10-04 00:54:10,transaction in uk,transactions,Cannot save file into a non-existent directory: 'reports/transactions',,no,, 1359.67
+2025-10-04 00:54:35,transaction in uk,transactions,success,541909,no,regex, 2578.31
