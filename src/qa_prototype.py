@@ -84,6 +84,9 @@ class QAPrototype:
             "countries_top": re.compile(r"\btop\s*\d*\s*(countries|regions|nations)\b", re.IGNORECASE),
             "products_in_country": re.compile(r"\btop\s*\d*\s*(products|items|skus).*(?:in|from)\s+([\w\s\.]+)", re.IGNORECASE),
             "transactions": re.compile(r"\btransactions?.*(?:in|from)\s+([\w\s\.]+)", re.IGNORECASE),
+            "compare_monthly": re.compile(r"compare\s+monthly\s+(?:revenue|sales|income)?\s*([\w\s\.\-]+?)\s+(?:vs|v\.?|and)\s*([\w\s\.\-]+)",re.IGNORECASE),
+            "compare_total": re.compile(r"compare(?!\s+monthly)\s+(?:total\s+)?(?:revenue|sales|income)?\s*([\w\s\.\-]+?)\s+(?:vs|v\.?|and)\s*([\w\s\.\-]+)",re.IGNORECASE),
+
         }
 
         # map common short names/aliases -> canonical country name as in your CSV
@@ -92,8 +95,13 @@ class QAPrototype:
             "u.k.": "United Kingdom",
             "gb": "United Kingdom",
             "great britain": "United Kingdom",
-            "us": "United States",
-            "usa": "United States",
+            "britain": "United Kingdom",
+            "us": "USA",
+            "u.s.": "USA",
+            "u.s.a": "USA",
+            "usa": "USA",
+            "united states": "USA",
+            "america": "USA",
             "eire": "EIRE",          
             "ireland": "EIRE",
         }
@@ -121,17 +129,19 @@ class QAPrototype:
         if key in self.country_map:
             return self.country_map[key]
         
+        if not hasattr(self, '_csv_countries'):
+            tx_file = os.path.join(self.summary_folder, "transactions.csv")
+            if os.path.exists(tx_file):
+                tx = pd.read_csv(tx_file, usecols=["Country"])
+                self._csv_countries = [str(country).strip() for country in tx["Country"].dropna().unique()]
+        else:
+            pass
         
-        tx_file = os.path.join(self.summary_folder, "transactions.csv")
-        if os.path.exists(tx_file):
-            tx = pd.read_csv(tx_file)
-            uni = [str(i).strip().lower() for i in tx["Country"].unique()]
-            # print(uni)
-            # try exact startswith
-            for i in uni:
-                if i.startswith(key):
-                    print(i)
-                    return i.title()
+        for i in self._csv_countries:
+            clean = re.sub(r"[^\w\s]", "", i).strip().lower()
+            if clean == key or clean.startswith(key):
+                return i.strip().title()
+            
         return raw_country.strip().title()
         
     def detect_category(self, query: str):
@@ -147,18 +157,21 @@ class QAPrototype:
 
         # Regex matching
         for cat, pat in self.regex_intents.items():
-            if pat.search(q):
-                print(f"🔎 Matched regex → {cat}")
-                return regex_to_meta[cat], "regex"
+            m = pat.search(q)
+            if m:
+                print(f"Matched regex → {cat}")
+                if cat in ("compare_total", "compare_monthly"):
+                    return "compare", "regex", cat, m
+                else:
+                    return regex_to_meta.get(cat, cat), "regex", None, m
             
         # Fallback to Synonyms
-        matches = []
         for cat, words in self.queries.items():
             for w in words:
                 if w in q:
                     return cat, "synonym"
         
-        return None, None
+        return None, None, None, None
     
     def extract_top_n(self, query:str, default=5):
         """Extract Top N from query, default=5."""
@@ -228,10 +241,11 @@ class QAPrototype:
         return False
     
     def handle_transactions_in_country(self, query, n=None):
-        country_match = re.search(r"(?:in|from) ([\w\s]+)", query, re.IGNORECASE)
+        country_match = re.search(r"(?:in|from|for)\s+([\w\s]+)", query, re.IGNORECASE)
         if country_match:
             raw = country_match.group(1).strip()
             country = self.normalize_country(raw)
+            # print(country)
             tx_file = os.path.join(self.summary_folder, "transactions.csv")
             if os.path.exists(tx_file):
                 tx = pd.read_csv(tx_file)
@@ -254,6 +268,123 @@ class QAPrototype:
                 return True
         return False
     
+    def handle_revenue(self, query):
+        country_match = re.search(r"(?:in|from|for)\s+([\w\s]+)", query, re.IGNORECASE)
+        if country_match:
+            country = self.normalize_country(country_match.group(1))
+            print(country)
+            countries_df = pd.read_csv(os.path.join(self.summary_folder, "countries_revenue.csv"))
+            match = countries_df[countries_df["Country"].str.lower() == country.lower()]
+            if not match.empty:
+                revenue = match["Revenue"].sum()
+                print(f"Revenue for {country}: {revenue:,.2f}")
+                return True
+            else:
+                print(f"No revenue found for country: {country}")
+                return True
+        else:
+        # fallback: total revenue
+            total = summary["Total Revenue"]
+            print(f"Total Revenue: {total:,.2f}")
+            return True
+
+    def handle_comparison(self, query, intent_match):
+        """
+    intent_match is the regex match object; detect_category returned ("compare", "regex", intent_name, match)
+    Supports compare_total and compare_monthly.
+    """
+        intent_name = intent_match[2]
+        m = intent_match[3]
+
+        metric = "revenue"
+        if not m or m.lastindex < 2:
+            print("⚠️ Couldn't extract comparison countries properly.")
+            return True
+        # --- Extract country names depending on regex groups ---
+        if m.lastindex >= 2:
+            a_raw = m.group(1).strip()
+            b_raw = m.group(2).strip()
+
+        else:
+            print("⚠️ Couldn't extract comparison countries properly.")
+            return True
+
+        a = self.normalize_country(a_raw)
+        b = self.normalize_country(b_raw)
+
+
+        tx_file = os.path.join(self.summary_folder, "transactions.csv")
+        if not os.path.exists(tx_file):
+            print("transactions.csv file missing")
+            return True
+        
+        tx = pd.read_csv(tx_file)
+        tx["Country_norm"] = tx["Country"].apply(lambda x: self.normalize_country(str(x)))
+
+        a_norm = a.lower()
+        b_norm = b.lower()
+        tx["Country_norm"] = tx["Country_norm"].str.lower()
+        print("a_norm:", a_norm)
+        print("b_norm:", b_norm)
+        
+        if intent_name == "compare_total":
+            sum_a = tx[tx["Country_norm"] == a_norm]["Revenue"].sum()
+            sum_b = tx[tx["Country_norm"] == b_norm]["Revenue"].sum()
+            df_cmp = pd.DataFrame({
+                "Country" : [a,b],
+                metric.capitalize(): [sum_a, sum_b]
+            })
+            print(f"Total {metric.title()} Comparison: {a} vs {b}")
+            print("-"*40)
+            print(df_cmp.to_string(index=False))
+
+            # plot the bar chart
+            fig, ax = plt.subplots(figsize=(6,4))
+            df_cmp.plot(x="Country", y=metric.capitalize(), kind="bar", ax=ax, legend=False)
+            ax.set_title(f"Total {metric.title()}: {a} vs {b}")
+            ax.set_ylabel(metric.capitalize())
+            # Save the plot
+            out = f"reports/plots/compare_{a.replace(' ','_')}_vs_{b.replace(' ','_')}.png"
+            plt.tight_layout()
+            plt.savefig(out)
+            plt.show()
+            print(f"Plot save to {out}")
+            return True
+
+        elif intent_name == "compare_monthly":
+            if 'YearMonth' not in tx.columns:
+                print("Year month columns is missing in transacctions.csv")
+                return True
+            
+            df_a = tx[tx["Country_norm"] == a_norm].groupby("YearMonth")["Revenue"].sum().reset_index()
+            df_b = tx[tx["Country_norm"] == b_norm].groupby("YearMonth")["Revenue"].sum().reset_index()
+
+            if df_a.empty and df_b.empty:
+                print(f"No monthly data for {a} or {b}")
+                return True
+            
+            # merge and prepare for plotting
+            df_m = pd.merge(df_a, df_b, on=["YearMonth"], how="outer", suffixes=(f"_{a}", f"_{b}")).fillna(0)
+            df_m_plot = df_m.set_index("YearMonth")
+            df_m_plot.columns = [f"{metric.title()} {a}", f"{metric.title()} {b}"]
+
+            #plot
+            fig , ax = plt.subplots(figsize=(9,4))
+            df_m_plot.plot(ax=ax, marker='o')
+            ax.set_title(f"Monthly {metric.title()} Trend: {a} vs {b}")
+            ax.set_ylabel(metric.title())
+            plt.xticks(rotation=45)
+            plt.tight_layout()
+
+            out = f"reports/plots/compare_{a.replace(' ', '_')}_vs_{b.replace(' ', '_')}_monthly.png"
+            plt.savefig(out)
+            plt.show()
+            print(f"Plot saved to {out}")
+            return True
+        else:
+            print("⚠️ Unknown comparison intent.")
+            return True
+
     def display(self, category, query=None):
         print(f"\n🔎 Query: {query}")
         meta = self.metadata[category]
@@ -263,9 +394,14 @@ class QAPrototype:
         n = self.extract_top_n(query) if meta["top_n"] and query else None
         
         # Routes to handlers
-        if category in ["customers", "revenue"]:
+        if category in ["customers"]:
             # Single value summary
-            self.handle_single_value(meta, df)
+            self.handle_single_value(meta, df, query)
+        
+        elif category == "revenue":
+            if not self.handle_revenue(query):
+                self.handle_single_value(meta, df)
+
 
         elif category in ["countries", "products"]:
             # top N list
@@ -284,8 +420,28 @@ class QAPrototype:
             self.fallback_response()
     
     # Handlers
-    def handle_single_value(self, meta, df):
+    def handle_single_value(self, meta, df, query=None):
         """Show one metric (customers, revenue, etc.)"""
+        if query and any(i in query.lower() for i in self.queries["revenue"]):
+            match = re.search(r"(?:from|in)\s+([\w\s\.]+)", query, re.IGNORECASE)
+            # print(match)
+            if match:
+                country = match.group(1).strip()
+                country = re.sub(r"^the\s+", "", country, flags=re.IGNORECASE)
+                country_norm = self.normalize_country(country)
+                tx_file = os.path.join(self.summary_folder, "transactions.csv")
+                if os.path.exists(tx_file):
+                    tx = pd.read_csv(tx_file)
+                    tx["Country_norm"] = tx["Country"].astype(str).str.strip().str.lower()
+                    target = country_norm.lower()
+                    subset = tx[tx["Country_norm"] == target]
+                    if subset.empty:
+                        print(f"⚠️ No revenue found for country: {country}")
+                        return
+                    total = subset["Revenue"].sum()
+                    print(f"Total Revenue for {country}: {total:,.3f}")
+                    return
+        
         val = df.iloc[0][meta["value_col"]]
         print(f"{meta['value_col']}: {val:,}")
     
@@ -340,17 +496,25 @@ class QAPrototype:
         print("Welcome to QA Prototype! Type 'exit' to quit.")
         while True:
             query = input("\nEnter your query: ").strip().lower()
-            if query == 'exit':
+            if query in ['exit', "quit"]:
                 print("Exiting. Goodbye!")
                 break
 
             start = time.time()
             try:
-                cat, matched_by = self.detect_category(query)
-                print(cat, matched_by)
-                if not cat:
+                intent_match = self.detect_category(query)
+                if not intent_match:
                     self.fallback_response()
-                    self.log_query(query, None, "fallback", matched_by=matched_by, exec_time_ms = (time.time() - start) * 1000)
+                    self.log_query(query, None, "fallback", matched_by=None, exec_time_ms =(time.time() - start) * 1000)
+                    continue
+                
+                cat, matched_by = intent_match[0], intent_match[1]
+                print(cat, matched_by)
+
+                # Handle Comparison queries first
+                if cat == "compare":
+                    self.handle_comparison(query, intent_match)
+                    self.log_query(query, cat, status="success", matched_by=matched_by, exec_time_ms = (time.time() - start) * 1000)
                     continue
 
                 # Display + count rows

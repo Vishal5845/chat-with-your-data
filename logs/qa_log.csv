@@ -20,3 +20,106 @@ timestamp,query,category,status,rows,plot,matched_by,exec_time_ms
 2025-10-04 00:53:23,transaction in uk,transactions,success,541909,no,regex, 2591.82
 2025-10-04 00:54:10,transaction in uk,transactions,Cannot save file into a non-existent directory: 'reports/transactions',,no,, 1359.67
 2025-10-04 00:54:35,transaction in uk,transactions,success,541909,no,regex, 2578.31
+2025-10-07 00:10:04,total customers,customers,success,1,no,synonym, 4.49
+2025-10-07 00:10:14,how many customers,customers,success,1,no,synonym, 3.07
+2025-10-07 00:10:19,total revenue,revenue,success,1,no,synonym, 2.77
+2025-10-07 00:10:26,what is the revenue,revenue,success,1,no,synonym, 3.42
+2025-10-07 00:10:36,top 5 countries,countries,success,38,yes,regex, 2354.21
+2025-10-07 00:10:57,top countries by revenue,countries,success,38,yes,regex, 3808.16
+2025-10-07 00:11:06,show countries,countries,success,38,yes,synonym, 2348.49
+2025-10-07 00:11:16,countries revenue,countries,success,38,yes,synonym, 2459.78
+2025-10-07 00:11:29,top 10 products,products,success,4223,yes,synonym, 3061.12
+2025-10-07 00:11:43,best-selling products,products,success,4223,yes,synonym, 3012.48
+2025-10-07 00:11:56,top 5 products in uk,products,success,4223,yes,regex, 3408.08
+2025-10-07 00:12:06,top 10 products in us,products,success,4223,yes,regex, 536.50
+2025-10-07 00:12:15,top 10 products in usa,products,success,4223,yes,regex, 540.37
+2025-10-07 00:13:10,transactions in uk,transactions,success,541909,no,regex, 2530.48
+2025-10-07 00:13:26,orders from united stated,transactions,success,541909,no,synonym, 1794.98
+2025-10-07 00:13:35,orders from germany,transactions,success,541909,no,synonym, 1826.23
+2025-10-07 00:13:53,top 10 transactions in uk,transactions,success,541909,no,regex, 2538.25
+2025-10-07 00:14:03,monthly revenue,monthly_revenue,success,13,yes,synonym, 3059.01
+2025-10-07 00:14:12,sales trend,monthly_revenue,success,13,yes,regex, 4410.20
+2025-10-07 00:14:23,revenue by month,monthly_revenue,success,13,yes,regex, 1949.28
+2025-10-07 00:14:55,compare total revenue uk vs germany,compare,success,,no,regex, 11341.29
+2025-10-07 00:15:17,compare sales eire vs uk,compare,success,,no,regex, 4884.46
+2025-10-07 00:15:47,compare monthly revenue uk vs finland,compare,success,,no,regex, 15499.90
+2025-10-07 00:16:14,compare monthly revenue uk vs finland,compare,success,,no,regex, 9074.75
+2025-10-07 00:16:31,compare monthly sales eire vs united kingdom,compare,success,,no,regex, 8477.82
+2025-10-07 00:19:27,compare monthly revenue uk vs finland,compare,success,,no,regex, 6943.61
+2025-10-07 00:20:03,compare monthly revenue uk vs finland,compare,success,,no,regex, 4951.01
+2025-10-07 00:21:35,compare monthly revenue uk vs finland,compare,success,,no,regex, 5200.91
+2025-10-07 00:23:05,compare monthly revenue uk vs finland,compare,no such group,,no,, 0.20
+2025-10-07 00:25:46,compare monthly revenue uk vs finland,compare,success,,no,regex, 9172.12
+2025-10-07 00:27:31,compare total revenue uk vs germany,compare,success,,no,regex, 3794.35
+2025-10-08 23:09:22,compare monthly revenue uk vs finland,compare,success,,no,regex, 4657.49
+2025-10-08 23:14:51,compare total revenue uk vs finland,compare,success,,no,regex, 3450.52
+2025-10-08 23:26:02,compare monthly revenue uk vs finland,compare,success,,no,regex, 4727.34
+2025-10-08 23:30:25,compare monthly revenue uk vs finland,compare,success,,no,regex, 39582.83
+2025-10-08 23:31:53,compare monthly revenue uk vs finland,compare,success,,no,regex, 23481.78
+2025-10-08 23:32:38,compare monthly revenue uk vs finland,compare,success,,no,regex, 10788.49
+2025-10-08 23:32:57,compare monthly revenue uk vs germany,compare,success,,no,regex, 9824.24
+2025-10-08 23:33:27,compare monthly revenue uk vs finland,compare,success,,no,regex, 9270.42
+2025-10-08 23:33:50,compare monthly revenue uk vs finland,compare,success,,no,regex, 5118.76
+2025-10-08 23:34:46,compare total sales uk vs germany,compare,success,,no,regex, 29540.61
+2025-10-08 23:37:24,compare total sales uk vs germany,compare,success,,no,regex, 13984.50
+2025-10-08 23:37:39,compare monthly revenue uk vs finland,compare,success,,no,regex, 4108.87
+2025-10-08 23:37:56,compare total revenue uk vs finland,compare,success,,no,regex, 3166.97
+2025-10-08 23:38:15,compare total sales uk vs germany,compare,success,,no,regex, 3741.66
+2025-10-08 23:38:35,compare revenue eire vs united kingdom,compare,success,,no,regex, 10493.93
+2025-10-08 23:45:33,compare monthly revenue uk vs finland,compare,success,,no,regex, 4797.93
+2025-10-08 23:45:47,compare total revenue uk vs finland,compare,success,,no,regex, 3830.64
+2025-10-08 23:46:11,compare total sales uk vs germany,compare,success,,no,regex, 3844.69
+2025-10-08 23:46:21,compare monthly income usa vs eire,compare,success,,no,regex, 4144.32
+2025-10-08 23:51:17,total revenue,revenue,success,1,no,synonym, 6.09
+2025-10-08 23:51:25,total sales,revenue,success,1,no,synonym, 3.29
+2025-10-08 23:51:33,how much revenue did we get from the uk?,revenue,success,1,no,synonym, 4.14
+2025-10-09 00:00:34,how much revenue did we get from the uk?,revenue,success,1,no,synonym, 979.34
+2025-10-09 00:01:10,how much revenue did we get from the uk?,revenue,success,1,no,synonym, 963.22
+2025-10-09 00:02:43,how much revenue did we get from the uk?,revenue,success,1,no,synonym, 603.42
+2025-10-09 00:03:39,sales in eire,revenue,success,1,no,synonym, 538.41
+2025-10-09 00:03:59,sales in eire,revenue,success,1,no,synonym, 555.77
+2025-10-09 00:04:04,revenue from netherlands,revenue,success,1,no,synonym, 998.32
+2025-10-09 00:04:13,revenue from netherlands,revenue,success,1,no,synonym, 979.78
+2025-10-09 00:04:18,show revenue by country,countries,success,38,yes,synonym, 3863.77
+2025-10-09 00:05:13,compare total revenue uk vs finland,compare,success,,no,regex, 3883.19
+2025-10-09 00:05:31,compare total revenue uk vs germany,compare,success,,no,regex, 4881.51
+2025-10-09 00:05:44,compare monthly revenue uk vs finland,compare,success,,no,regex, 3002.49
+2025-10-09 00:06:07,compare monthly sales eire vs united kingdom,compare,success,,no,regex, 3637.84
+2025-10-09 00:06:27,monthly revenue,monthly_revenue,success,13,yes,synonym, 2866.20
+2025-10-09 00:06:41,show monthly sales trend,monthly_revenue,success,13,yes,regex, 2690.95
+2025-10-09 00:06:57,monthly income by country,countries,success,38,yes,synonym, 2486.89
+2025-10-09 00:07:24,top 5 countries by revenue,countries,success,38,yes,regex, 2134.84
+2025-10-09 00:07:33,top 5 countries by revenue,countries,success,38,yes,regex, 2389.07
+2025-10-09 00:07:38,top 10 countries,countries,success,38,yes,regex, 2309.37
+2025-10-09 00:07:52,top 3 products in united kingdom,products,success,4223,yes,regex, 5126.40
+2025-10-09 00:08:13,top 5 products from eire,products,success,4223,yes,regex, 3364.25
+2025-10-09 00:08:27,top products from finland,products,success,4223,yes,regex, 3879.58
+2025-10-09 00:08:34,total customers,customers,success,1,no,synonym, 3.44
+2025-10-09 00:08:48,total transaction in uk,transactions,success,541909,no,regex, 2526.58
+2025-10-09 00:09:02,transation in germany,,None,,no,, 0.17
+2025-10-09 00:09:16,transactions from germany,transactions,success,541909,no,regex, 1799.54
+2025-10-09 00:09:44,export transactions for finland,transactions,success,541909,no,synonym, 19568.06
+2025-10-09 00:12:10,export transactions for finland,transactions,success,541909,no,synonym, 21288.70
+2025-10-09 00:14:11,export transactions for finland,transactions,success,541909,no,synonym, 1796.68
+2025-10-09 00:14:49,compare revenue uk and eire,compare,success,,no,regex, 4836.68
+2025-10-09 00:15:06,compare sales united states vs france,compare,success,,no,regex, 9471.48
+2025-10-09 00:15:17,revenue for ireland,revenue,success,1,no,synonym, 19.22
+2025-10-09 00:15:41,top countries,countries,success,38,yes,regex, 2275.25
+2025-10-09 00:15:52,compare monthly sales uk vs finland,compare,success,,no,regex, 2757.89
+2025-10-09 00:16:04,compare total sales uk vs germany,compare,success,,no,regex, 3404.84
+2025-10-09 00:16:13,transactions in netherlands,transactions,success,541909,no,regex, 1793.24
+2025-10-09 00:16:22,how many customers do we have?,customers,success,1,no,synonym, 20.06
+2025-10-09 00:16:34,top 5 products,products,success,4223,yes,synonym, 2660.87
+2025-10-09 00:21:51,revenue for ireland,revenue,success,1,no,synonym, 4.89
+2025-10-09 00:22:59,compare sales united states vs france,compare,success,,no,regex, 6576.77
+2025-10-09 00:23:45,compare sales united states vs france,compare,success,,no,regex, 6287.15
+2025-10-09 00:31:50,compare sales united states vs france,compare,success,,no,regex, 8513.07
+2025-10-09 23:24:20,compare sales united states vs france,compare,success,,no,regex, 4586.54
+2025-10-09 23:24:46,compare sales united states vs france,compare,success,,no,regex, 5463.35
+2025-10-10 00:02:44,compare sales united states vs france,compare,success,,no,regex, 8608.26
+2025-10-10 00:04:12,compare sales united states vs france,compare,success,,no,regex, 7195.55
+2025-10-10 00:05:10,compare monthly sales us vs germany,compare,success,,no,regex, 6362.48
+2025-10-10 00:05:51,revenue from uk,revenue,success,1,no,synonym, 3.49
+2025-10-10 00:06:53,revenue in uk,revenue,success,1,no,synonym, 3.26
+2025-10-10 00:10:06,revenue ik uk,revenue,success,1,no,synonym, 3.41
+2025-10-10 00:10:12,revenue in uk,revenue,success,1,no,synonym, 5.28
