@@ -123,3 +123,33 @@ timestamp,query,category,status,rows,plot,matched_by,exec_time_ms
 2025-10-10 00:06:53,revenue in uk,revenue,success,1,no,synonym, 3.26
 2025-10-10 00:10:06,revenue ik uk,revenue,success,1,no,synonym, 3.41
 2025-10-10 00:10:12,revenue in uk,revenue,success,1,no,synonym, 5.28
+2025-10-12 21:12:46,revenue in uk,revenue,success,1,no,synonym, 9.55
+2025-10-13 00:10:01,revenue in uk,revenue,success,1,no,synonym, 6.89
+2025-10-13 00:10:10,sales in eire,revenue,success,1,no,synonym, 4.49
+2025-10-13 00:10:18,income from france,revenue,success,1,no,synonym, 257.50
+2025-10-13 00:11:39,quite,,None,,no,, 0.12
+2025-10-13 00:11:53,profit from germany,revenue,success,1,no,synonym, 243.73
+2025-10-13 00:57:14,compare that with france,,None,,no,, 0.25
+2025-10-13 00:57:50,revenue in uk,revenue,success,1,no,synonym, 6.38
+2025-10-13 00:58:02,compare that with france,,None,,no,, 0.22
+2025-10-13 00:59:42,quuit,,None,,no,, 0.20
+2025-10-13 01:00:18,revenue in uk,revenue,success,1,no,synonym, 5.29
+2025-10-13 01:04:05,revenue in uk,revenue,success,1,no,synonym, 6.73
+2025-10-13 01:04:15,compare that with france,,None,,no,, 0.19
+2025-10-13 23:35:38,revenue in uk,revenue,success,1,no,synonym, 8.74
+2025-10-13 23:35:52,compare that with france,,None,,no,, 0.20
+2025-10-13 23:44:14,revenue in uk,revenue,cannot access local variable 'countries_df' where it is not associated with a value,,no,, 3.77
+2025-10-13 23:50:56,quite,,None,,no,, 0.20
+2025-10-13 23:51:10,revenue in uk,revenue,success,1,no,synonym, 6.48
+2025-10-13 23:51:19,compare that with france,,None,,no,, 0.22
+2025-10-14 00:07:30,revenue in uk,revenue,success,1,no,synonym, 7.33
+2025-10-14 00:07:39,compare that with france,,None,,no,, 0.26
+2025-10-14 00:09:13,revenue in uk,revenue,success,1,no,synonym, 5.87
+2025-10-14 00:09:32,compare that with france,,None,,no,, 0.16
+2025-10-14 00:09:59,compare that with france,,None,,no,, 0.28
+2025-10-14 00:10:10,revenue in uk,revenue,success,1,no,synonym, 5.27
+2025-10-14 00:10:32,revenue in uk,revenue,success,1,no,synonym, 4.45
+2025-10-14 00:12:55,revenue in uk,revenue,success,1,no,synonym, 6.17
+2025-10-14 00:16:27,revenue in uk,revenue,success,1,no,synonym, 6.80
+2025-10-14 00:17:23,and what about germany?,,None,,no,, 0.16
+2025-10-14 00:17:35,and what about germany?,,None,,no,, 0.40

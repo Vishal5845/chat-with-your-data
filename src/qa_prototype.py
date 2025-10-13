@@ -11,6 +11,13 @@ summary = pd.read_csv("data/processed/summary.csv").to_dict(orient="records")[0]
 countries = pd.read_csv("data/processed/countries_revenue.csv")
 products = pd.read_csv("data/processed/products_revenue.csv")
 
+# Global variable to store last query context for follow-ups
+last_query_context = {
+    "metric": None,
+    "country": None,
+    "value": None
+}
+
 
 class QAPrototype:
     def __init__ (self, summary_folder = "data/processed"):
@@ -26,7 +33,7 @@ class QAPrototype:
             "products": ["product", "products", "item", "sku"],
             "monthly_revenue": ["monthly revenue", "sales trend", "trend", "revenue by month", "monthly"],
             "transactions": ["transaction", "transactions", "orders", "purchases"],
-            "revenue": ["revenue", "sales", "income"]
+            "revenue": ["revenue", "sales", "income","turnover","earnings","profit"]
         }
 
         # Metadata defines CSV, columns, and behavior for each category
@@ -269,25 +276,75 @@ class QAPrototype:
         return False
     
     def handle_revenue(self, query):
+        global last_query_context
+        print("handle_revenue CALLED with query:", query)
+        print("last_query_context:", last_query_context)
+
+        # Normalize query 
+        query_lower = query.lower().strip()
+
+        metric_synonyms = ["revenue", "sales", "income"]
+        metric = next((w for w in metric_synonyms if w in query_lower), "revenue")
+
+        # Load country data
+        countries_df = pd.read_csv(os.path.join(self.summary_folder, "countries_revenue.csv"))
+        # check for follow ups query
+        if "compare" in query_lower or "that" in query_lower or "with" in query_lower:
+            if last_query_context.get("value") is None:
+                print("No previous query to compare. Please ask about a country first.")
+                return True
+            
+            print("🔁 Detected follow-up comparison")
+            #detect new country
+            new_country = re.search(r"(?:in|from|for|with)\s+([\w\s]+)", query, re.IGNORECASE)
+            if not new_country:
+                print("Please specify the country to compare with.")
+                return True
+            new_country = self.normalize_country(new_country.group(1))
+            countries_df = pd.read_csv(os.path.join(self.summary_folder, "countries_revenue.csv"))
+            new_match = countries_df[countries_df["Country"].str.lower() == new_country.lower()]
+            if new_match.empty:
+                print(f"No {last_query_context['metric']} found for country: {new_country}")
+                return True
+            
+            new_value = new_match["Revenue"].values[0]
+            old_country = last_query_context["country"]
+            old_value = last_query_context["value"]
+            diff = new_value - old_value
+            sign = "+" if diff >= 0 else "-"
+            print(f"\n📊 {metric.title()} Comparison\n-----------------------------")
+            print(f"{old_country}: {old_value:,.2f}")
+            print(f"{new_country}: {new_value:,.2f}")
+            print(f"Difference: {sign}{abs(diff):,.2f}")
+            # update conext
+            last_query_context.update({"country": new_country, "value": new_value})
+            print("✅ After call:", last_query_context)
+            return True
+        
+        # detect in normal query
         country_match = re.search(r"(?:in|from|for)\s+([\w\s]+)", query, re.IGNORECASE)
+        print(country_match.group(1))
         if country_match:
             country = self.normalize_country(country_match.group(1))
-            print(country)
-            countries_df = pd.read_csv(os.path.join(self.summary_folder, "countries_revenue.csv"))
             match = countries_df[countries_df["Country"].str.lower() == country.lower()]
             if not match.empty:
-                revenue = match["Revenue"].sum()
-                print(f"Revenue for {country}: {revenue:,.2f}")
+                value = match["Revenue"].values[0]
+                print(f"\n📈 {metric.title()} Report\n-----------------------------")
+                print(f"Country: {country}")
+                print(f"Total {metric.title()}: {value:,.2f}")
+                # Save context for follow-ups
+                last_query_context.update({"metric": metric, "country": country, "value": value})
                 return True
             else:
-                print(f"No revenue found for country: {country}")
+                print(f"No {metric} found for country: {country}")
                 return True
         else:
-        # fallback: total revenue
             total = summary["Total Revenue"]
-            print(f"Total Revenue: {total:,.2f}")
+            print(f"\n📈 {metric.title()} Report\n-----------------------------")
+            print(f"Total {metric.title()}: {total:,.2f}")
+            last_query_context.update({"metric": metric, "country": None, "value": total})
             return True
-
+        
     def handle_comparison(self, query, intent_match):
         """
     intent_match is the regex match object; detect_category returned ("compare", "regex", intent_name, match)
@@ -502,6 +559,9 @@ class QAPrototype:
 
             start = time.time()
             try:
+                if any(w in query for w in ["compare", "that", "with","about"]) and last_query_context.get("value"):
+                    self.handle_revenue(query)
+                    continue
                 intent_match = self.detect_category(query)
                 if not intent_match:
                     self.fallback_response()
