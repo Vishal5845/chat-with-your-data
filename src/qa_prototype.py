@@ -222,6 +222,42 @@ class QAPrototype:
         plt.show()
         print(f"✅ Plot saved to {save_path}")
 
+    def extract_country_from_followup(self, query:str) -> str:
+        q = query.lower().strip()
+        patterns = [
+            r"^(and|also|too|as well)\s*",
+            r"^(what about|how about)\s*",
+            r"^(next|then)\s*",
+            r"^(compare with)\s*",
+        ]
+        for p in patterns:
+            match = re.sub(p,"", q).strip()
+
+        return match.title()
+
+    def is_natural_followup(self, query: str) -> bool:
+        """
+    Detect short/natural follow-up phrasings (no explicit 'revenue' word).
+    Examples: 'and france', 'how about germany?', 'france'
+    """
+        q = query.lower().strip()
+
+        follow_up = [
+            "and","also", "too", "as well", 
+        "next", "then", 
+        "what about", "how about", 
+        "compare with"
+        ]
+
+        if any(q.startswith(i) or i in q for i in follow_up):
+            return True
+
+        metric_words = ["revenue", "sales", "income", "customers", "trend", "product"]
+        if len(q.split()) <=2 and not any(i in q for i in metric_words):
+            return True
+        
+        return False
+
     def handle_products_in_country(self, query, n):
         country_match = re.search(r"(?:in|from) ([\w\s]+)", query, re.IGNORECASE)
         if country_match:
@@ -282,13 +318,52 @@ class QAPrototype:
 
         # Normalize query 
         query_lower = query.lower().strip()
-
         metric_synonyms = ["revenue", "sales", "income"]
         metric = next((w for w in metric_synonyms if w in query_lower), "revenue")
 
         # Load country data
         countries_df = pd.read_csv(os.path.join(self.summary_folder, "countries_revenue.csv"))
-        # check for follow ups query
+
+        # Natural follow-up detection
+        if self.is_natural_followup(query):
+            print("Follow up detected")
+            if not last_query_context.get("value"):
+                print("No previous query to compare. Please ask about a country first.")
+                return True
+            
+            # Strip common follow-up prefixes
+            query_lower = query.lower().strip()
+            prefixes = ["and", "also", "too", "as well", "what about", "how about", "next", "then"]
+            for p in prefixes:
+                if query_lower.startswith(p):
+                    query_lower = query_lower[len(p):].strip()
+                    break
+
+            new_country = self.normalize_country(query_lower)
+            print("Country", new_country)
+            if not new_country:
+                print("Could not detect country in follow-up")
+                return True
+
+            new_match = countries_df[countries_df["Country"].str.lower() == new_country.lower()]
+            if new_match.empty:
+                print(f"No {metric} found for country: {new_country}")
+                return True
+            
+            new_value = new_match["Revenue"].values[0]
+            old_country = last_query_context["country"]
+            old_value = last_query_context["value"]
+            diff = new_value - old_value
+            sign = "+" if diff >= 0 else "-"
+            print(f"\n📊 {metric.title()} Comparison\n-----------------------------")
+            print(f"{old_country}: {old_value:,.2f}")
+            print(f"{new_country}: {new_value:,.2f}")
+            print(f"Difference: {sign}{abs(diff):,.2f}")
+            last_query_context.update({"country": new_country, "value": new_value})
+            print("After natural follow-up:", last_query_context)
+            return True
+
+        # Explicit 'compare that with ...' queries
         if "compare" in query_lower or "that" in query_lower or "with" in query_lower:
             if last_query_context.get("value") is None:
                 print("No previous query to compare. Please ask about a country first.")
@@ -559,13 +634,23 @@ class QAPrototype:
 
             start = time.time()
             try:
-                if any(w in query for w in ["compare", "that", "with","about"]) and last_query_context.get("value"):
+                print("Query:", query)
+
+                if self.is_natural_followup(query):
+                    print("Detected Follow up")
                     self.handle_revenue(query)
+                    self.log_query(query, category="revenue", status="success",
+                               exec_time_ms=(time.time() - start) * 1000)
                     continue
+                
                 intent_match = self.detect_category(query)
-                if not intent_match:
-                    self.fallback_response()
-                    self.log_query(query, None, "fallback", matched_by=None, exec_time_ms =(time.time() - start) * 1000)
+                print("Detected intent:", intent_match)
+
+                if intent_match[0] is None or intent_match is None:
+                    print("No intent detected")
+                    self.handle_revenue(query)
+                    self.log_query(query, category="revenue", status="success",
+                               exec_time_ms=(time.time() - start) * 1000)
                     continue
                 
                 cat, matched_by = intent_match[0], intent_match[1]
