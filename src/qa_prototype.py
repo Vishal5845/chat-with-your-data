@@ -87,14 +87,19 @@ class QAPrototype:
 
         # Regex patterns (precompiled)
         self.regex_intents = {
-            "monthly_revenue": re.compile(r"\b(revenue|sales|income).*(month|monthly|trend)\b", re.IGNORECASE),
-            "countries_top": re.compile(r"\btop\s*\d*\s*(countries|regions|nations)\b", re.IGNORECASE),
-            "products_in_country": re.compile(r"\btop\s*\d*\s*(products|items|skus).*(?:in|from)\s+([\w\s\.]+)", re.IGNORECASE),
-            "transactions": re.compile(r"\btransactions?.*(?:in|from)\s+([\w\s\.]+)", re.IGNORECASE),
-            "compare_monthly": re.compile(r"compare\s+monthly\s+(?:revenue|sales|income)?\s*([\w\s\.\-]+?)\s+(?:vs|v\.?|and)\s*([\w\s\.\-]+)",re.IGNORECASE),
-            "compare_total": re.compile(r"compare(?!\s+monthly)\s+(?:total\s+)?(?:revenue|sales|income)?\s*([\w\s\.\-]+?)\s+(?:vs|v\.?|and)\s*([\w\s\.\-]+)",re.IGNORECASE),
-
-        }
+            # Comparison - total revenue
+            "compare_total": re.compile(r"\bcompare\s+(?:total\s+)?(?:revenue|sales|income)?\s*([A-Za-z\.\s]+?)\s+(?:vs|v\.?|and|with)\s+([A-Za-z\.\s]+)",re.IGNORECASE),
+            # Comparison - monthly revenue
+            "compare_monthly": re.compile(r"\bcompare\s+(?:monthly\s+)?(?:revenue|sales|income)?\s*([A-Za-z\.\s]+?)\s+(?:vs|v\.?|and|with)\s+([A-Za-z\.\s]+)",re.IGNORECASE),
+            # Monthly revenue trends
+            "monthly_revenue": re.compile(r"\b(monthly|trend|per\s+month|over\s+time)\b.*(revenue|sales|income)",re.IGNORECASE),
+            # Top countries
+            "countries_top": re.compile(r"\b(top|highest|best)\s+countries?\b.*(revenue|sales|income)?",re.IGNORECASE,),
+            # Products in country
+            "products_in_country": re.compile(r"\b(product|item)\b.*(revenue|sales|income)?",re.IGNORECASE,),
+            # Transactions
+            "transactions": re.compile(r"\btransactions?\b",re.IGNORECASE,),
+            }
 
         # map common short names/aliases -> canonical country name as in your CSV
         self.country_map = {
@@ -121,6 +126,8 @@ class QAPrototype:
             "customers": 1,
             "revenue": 0
         }
+        self.df_monthly = pd.read_csv(os.path.join(self.summary_folder, "monthly_revenue.csv"))
+
 
     def normalize_country(self, raw_country:str) -> str:
         """
@@ -141,8 +148,6 @@ class QAPrototype:
             if os.path.exists(tx_file):
                 tx = pd.read_csv(tx_file, usecols=["Country"])
                 self._csv_countries = [str(country).strip() for country in tx["Country"].dropna().unique()]
-        else:
-            pass
         
         for i in self._csv_countries:
             clean = re.sub(r"[^\w\s]", "", i).strip().lower()
@@ -251,6 +256,9 @@ class QAPrototype:
 
         if any(q.startswith(i) or i in q for i in follow_up):
             return True
+        
+        if q.startswith("compare ") or " compare " in q:
+            return False
 
         metric_words = ["revenue", "sales", "income", "customers", "trend", "product"]
         if len(q.split()) <=2 and not any(i in q for i in metric_words):
@@ -332,7 +340,6 @@ class QAPrototype:
                 return True
             
             # Strip common follow-up prefixes
-            query_lower = query.lower().strip()
             prefixes = ["and", "also", "too", "as well", "what about", "how about", "next", "then"]
             for p in prefixes:
                 if query_lower.startswith(p):
@@ -363,41 +370,8 @@ class QAPrototype:
             print("After natural follow-up:", last_query_context)
             return True
 
-        # Explicit 'compare that with ...' queries
-        if "compare" in query_lower or "that" in query_lower or "with" in query_lower:
-            if last_query_context.get("value") is None:
-                print("No previous query to compare. Please ask about a country first.")
-                return True
-            
-            print("🔁 Detected follow-up comparison")
-            #detect new country
-            new_country = re.search(r"(?:in|from|for|with)\s+([\w\s]+)", query, re.IGNORECASE)
-            if not new_country:
-                print("Please specify the country to compare with.")
-                return True
-            new_country = self.normalize_country(new_country.group(1))
-            countries_df = pd.read_csv(os.path.join(self.summary_folder, "countries_revenue.csv"))
-            new_match = countries_df[countries_df["Country"].str.lower() == new_country.lower()]
-            if new_match.empty:
-                print(f"No {last_query_context['metric']} found for country: {new_country}")
-                return True
-            
-            new_value = new_match["Revenue"].values[0]
-            old_country = last_query_context["country"]
-            old_value = last_query_context["value"]
-            diff = new_value - old_value
-            sign = "+" if diff >= 0 else "-"
-            print(f"\n📊 {metric.title()} Comparison\n-----------------------------")
-            print(f"{old_country}: {old_value:,.2f}")
-            print(f"{new_country}: {new_value:,.2f}")
-            print(f"Difference: {sign}{abs(diff):,.2f}")
-            # update conext
-            last_query_context.update({"country": new_country, "value": new_value})
-            print("✅ After call:", last_query_context)
-            return True
-        
-        # detect in normal query
-        country_match = re.search(r"(?:in|from|for)\s+([\w\s]+)", query, re.IGNORECASE)
+        # Detect in normal query
+        country_match = re.search(r"(?:in|from|for|of)\s+([\w\s]+)", query, re.IGNORECASE)
         print(country_match.group(1))
         if country_match:
             country = self.normalize_country(country_match.group(1))
@@ -420,6 +394,56 @@ class QAPrototype:
             last_query_context.update({"metric": metric, "country": None, "value": total})
             return True
         
+    def handle_monthly_revenue(self, query):
+        print(f"Monthly revenue with query: {query}")
+        q = query.lower()
+
+        df = self.df_monthly.copy()
+        df.columns = [c.strip() for c in df.columns]
+        name_col = "YearMonth"
+        value_col = "Revenue"
+        country_col = "Country" if "Country" in df.columns else None
+
+        # --- Extract Year ---
+        year_match = re.search(r"\b(20\d\d)\b", q)
+        # print(year_match.group(1))
+        year = year_match.group(1) if year_match else None
+        # print(year)
+
+        if year:
+            df = df[df[name_col].astype(str).str.startswith(str(year))]
+            print(df.head())
+        else:
+            # deafault to latest year
+            latest_year = df[name_col].astype(str).str[:4].max()
+            df = df[df[name_col].astype(str).str.startswith(latest_year)]
+            year = latest_year
+            
+        # -- Extract Country ---
+        for a, b in self.country_map.items():
+            if re.search(rf"\b{a}\b", q):
+                if country_col:
+                    df = df[df[country_col].str.lower() == b.lower()]
+                    print(f"Filtered for country: {b}")
+                else:
+                    print("No 'Country' column found, skipping country filter.")
+                    break
+            
+        if df.empty:
+            return f"No data found for {year}."
+        
+        df = df.groupby(name_col, as_index=False)[value_col].sum()
+        df = df.sort_values(by=name_col)
+        meta = {
+            "plot": True,
+            "name_col": name_col,
+            "value_col": value_col,
+            "chart_type": "line"
+        }
+
+        self.handle_trend("monthly_revenue", meta, df)
+        return f"Monthly revenue trend generated for {year}."
+
     def handle_comparison(self, query, intent_match):
         """
     intent_match is the regex match object; detect_category returned ("compare", "regex", intent_name, match)
@@ -428,21 +452,13 @@ class QAPrototype:
         intent_name = intent_match[2]
         m = intent_match[3]
 
-        metric = "revenue"
         if not m or m.lastindex < 2:
             print("⚠️ Couldn't extract comparison countries properly.")
             return True
         # --- Extract country names depending on regex groups ---
-        if m.lastindex >= 2:
-            a_raw = m.group(1).strip()
-            b_raw = m.group(2).strip()
 
-        else:
-            print("⚠️ Couldn't extract comparison countries properly.")
-            return True
-
-        a = self.normalize_country(a_raw)
-        b = self.normalize_country(b_raw)
+        a = self.normalize_country(m.group(1))
+        b = self.normalize_country(m.group(2))
 
 
         tx_file = os.path.join(self.summary_folder, "transactions.csv")
@@ -462,25 +478,19 @@ class QAPrototype:
         if intent_name == "compare_total":
             sum_a = tx[tx["Country_norm"] == a_norm]["Revenue"].sum()
             sum_b = tx[tx["Country_norm"] == b_norm]["Revenue"].sum()
-            df_cmp = pd.DataFrame({
-                "Country" : [a,b],
-                metric.capitalize(): [sum_a, sum_b]
-            })
-            print(f"Total {metric.title()} Comparison: {a} vs {b}")
+            print(f"Total Revenue Comparison: {a} vs {b}")
             print("-"*40)
-            print(df_cmp.to_string(index=False))
+            print(f"{a}: {sum_a}")
+            print(f"{b}: {sum_b}")
 
             # plot the bar chart
-            fig, ax = plt.subplots(figsize=(6,4))
-            df_cmp.plot(x="Country", y=metric.capitalize(), kind="bar", ax=ax, legend=False)
-            ax.set_title(f"Total {metric.title()}: {a} vs {b}")
-            ax.set_ylabel(metric.capitalize())
-            # Save the plot
-            out = f"reports/plots/compare_{a.replace(' ','_')}_vs_{b.replace(' ','_')}.png"
+            df_cmp = pd.DataFrame({"Country":[a,b],"Revenue":[sum_a,sum_b]})
+            df_cmp.plot(x="Country", y="Revenue", kind="bar", legend=False)
+            plt.title(f"Total Revenue: {a} vs {b}")
+            plt.ylabel("Revenue")
             plt.tight_layout()
-            plt.savefig(out)
+            plt.savefig(f"reports/plots/compare_{a.replace(' ','_')}_vs_{b.replace(' ','_')}.png")
             plt.show()
-            print(f"Plot save to {out}")
             return True
 
         elif intent_name == "compare_monthly":
@@ -498,13 +508,13 @@ class QAPrototype:
             # merge and prepare for plotting
             df_m = pd.merge(df_a, df_b, on=["YearMonth"], how="outer", suffixes=(f"_{a}", f"_{b}")).fillna(0)
             df_m_plot = df_m.set_index("YearMonth")
-            df_m_plot.columns = [f"{metric.title()} {a}", f"{metric.title()} {b}"]
+            df_m_plot.columns = [f"Revenue {a}", f"Revenue {b}"]
 
             #plot
             fig , ax = plt.subplots(figsize=(9,4))
             df_m_plot.plot(ax=ax, marker='o')
-            ax.set_title(f"Monthly {metric.title()} Trend: {a} vs {b}")
-            ax.set_ylabel(metric.title())
+            ax.set_title(f"Monthly Revenue Trend: {a} vs {b}")
+            ax.set_ylabel("Revenue")
             plt.xticks(rotation=45)
             plt.tight_layout()
 
@@ -633,8 +643,26 @@ class QAPrototype:
                 break
 
             start = time.time()
+            cat = None
             try:
                 print("Query:", query)
+                intent_match = self.detect_category(query)
+                cat = intent_match[0] if intent_match else None
+                print("Detected intent:", intent_match)
+                matched_by = intent_match[1]
+                print(matched_by)
+
+                if cat == "compare":
+                    self.handle_comparison(query, intent_match)
+                    self.log_query(query, cat, status="success", matched_by=matched_by, exec_time_ms = (time.time() - start) * 1000)
+                    continue
+
+                if any(i in query for i in ["monthly", "trend", "per month", "over time", "chart"]):
+                    print("Detected monthly/trend query")
+                    res = self.handle_monthly_revenue(query)
+                    print(res)
+                    self.log_query(query, category="monthly_revenue", status="success", exec_time_ms=(time.time() - start) * 1000)
+                    continue
 
                 if self.is_natural_followup(query):
                     print("Detected Follow up")
@@ -642,24 +670,12 @@ class QAPrototype:
                     self.log_query(query, category="revenue", status="success",
                                exec_time_ms=(time.time() - start) * 1000)
                     continue
-                
-                intent_match = self.detect_category(query)
-                print("Detected intent:", intent_match)
 
-                if intent_match[0] is None or intent_match is None:
+                if cat is None:
                     print("No intent detected")
                     self.handle_revenue(query)
                     self.log_query(query, category="revenue", status="success",
                                exec_time_ms=(time.time() - start) * 1000)
-                    continue
-                
-                cat, matched_by = intent_match[0], intent_match[1]
-                print(cat, matched_by)
-
-                # Handle Comparison queries first
-                if cat == "compare":
-                    self.handle_comparison(query, intent_match)
-                    self.log_query(query, cat, status="success", matched_by=matched_by, exec_time_ms = (time.time() - start) * 1000)
                     continue
 
                 # Display + count rows

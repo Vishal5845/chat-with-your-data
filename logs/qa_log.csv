@@ -179,3 +179,43 @@ timestamp,query,category,status,rows,plot,matched_by,exec_time_ms
 2025-10-25 23:44:16,and france,revenue,success,,no,, 255.35
 2025-10-25 23:44:45,what about germany,revenue,success,,no,, 3.05
 2025-10-25 23:45:04,what about us,revenue,success,,no,, 3.16
+2025-10-26 00:44:40,total customers,customers,success,1,no,synonym, 5.08
+2025-10-26 16:46:13,revenue for product party bunting in germany,products,success,4223,yes,synonym, 4708.13
+2025-10-28 13:52:07,revenue of uk,revenue,'NoneType' object has no attribute 'group',,no,, 3.93
+2025-10-28 13:52:59,revenue of uk,revenue,success,1,no,synonym, 3.41
+2025-10-28 13:53:23,revenue of uk,revenue,success,1,no,synonym, 9.32
+2025-10-28 13:53:47,and germany,revenue,success,,no,, 282.80
+2025-10-28 13:53:56,what about france,revenue,success,,no,, 4.49
+2025-10-28 13:54:04,also italy,revenue,success,,no,, 3.09
+2025-10-28 13:54:19,compare uk and germany,revenue,success,,no,, 4.09
+2025-10-28 13:55:50,compare uk and germany,revenue,success,,no,, 3.14
+2025-10-28 13:59:02,compare uk and germany,compare,"Invalid format specifier ' , .2f' for object of type 'float'",,no,, 2106.54
+2025-10-28 13:59:51,compare uk and germany,compare,success,,no,regex, 5827.02
+2025-10-28 14:00:06,compare france vs italy,compare,success,,no,regex, 4700.19
+2025-10-28 14:00:13,compare usa with canada,,'NoneType' object has no attribute 'group',,no,, 3.58
+2025-10-28 14:01:15,show montly revenue,revenue,'NoneType' object has no attribute 'group',,no,, 5.51
+2025-10-28 14:01:44,show monthly revenue,monthly_revenue,success,13,yes,synonym, 2426.12
+2025-10-28 14:02:02,monthly sales chart for year 2024,monthly_revenue,success,13,yes,synonym, 3612.72
+2025-10-28 14:02:26,revenue trend of usa,monthly_revenue,success,13,yes,regex, 3905.02
+2025-10-28 14:02:49,revenue in india,revenue,success,1,no,synonym, 7.49
+2025-10-28 14:03:15,sales for france,revenue,success,1,no,synonym, 7.06
+2025-10-28 14:03:40,income from japan,revenue,success,1,no,synonym, 6.77
+2025-10-28 14:03:53,and germany,revenue,success,,no,, 4.07
+2025-10-28 14:04:17,show top 5 countries by revenue,countries,success,38,yes,regex, 3186.28
+2025-10-28 14:04:26,product revenue,products,success,4223,yes,synonym, 2446.10
+2025-10-28 14:04:40,product revenue chart,products,success,4223,yes,synonym, 2216.67
+2025-10-28 14:05:15,revenue of mars,revenue,success,1,no,synonym, 7.06
+2025-10-28 14:05:27,and jupiter,revenue,success,,no,, 3.83
+2025-10-28 14:05:50,compare india and mars,compare,success,,no,regex, 4407.05
+2025-10-28 14:14:01,compare usa with canada,compare,success,,no,regex, 5829.09
+2025-10-28 14:14:13,compare uk and germany,compare,success,,no,regex, 3990.63
+2025-10-28 14:14:38,compare monthly revenue for usa vs canada,compare,success,,no,regex, 16673.49
+2025-10-28 23:58:07,monthly sales chart for 2012,monthly_revenue,cannot access local variable 'year' where it is not associated with a value,,no,, 2.23
+2025-10-28 23:59:19,quite,revenue,success,,no,, 3.56
+2025-10-28 23:59:25,monthly sales chart for 2024,monthly_revenue,cannot access local variable 'year' where it is not associated with a value,,no,, 1.05
+2025-10-28 23:59:45,monthly sales chart for 2024,monthly_revenue,cannot access local variable 'year' where it is not associated with a value,,no,, 0.88
+2025-10-29 00:00:09,monthly sales chart for 2024,monthly_revenue,success,,no,, 7.82
+2025-10-29 00:00:24,monthly sales chart for 2012,monthly_revenue,success,,no,, 2.92
+2025-10-29 00:00:46,monthly sales chart for 2010,monthly_revenue,success,,no,, 6213.25
+2025-10-29 00:00:57,monthly sales chart for 2011,monthly_revenue,success,,no,, 4799.14
+2025-10-29 00:01:11,revenue over time,monthly_revenue,success,,no,, 139.11
