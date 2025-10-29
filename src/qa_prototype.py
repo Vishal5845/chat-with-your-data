@@ -4,6 +4,8 @@ import matplotlib.pyplot as plt
 import os
 from datetime import *
 import csv, time
+from io import StringIO
+import sys
 
 # Load all summaries
 
@@ -99,6 +101,7 @@ class QAPrototype:
             "products_in_country": re.compile(r"\b(product|item)\b.*(revenue|sales|income)?",re.IGNORECASE,),
             # Transactions
             "transactions": re.compile(r"\btransactions?\b",re.IGNORECASE,),
+            "compare_years": re.compile(r"compare\s+(?:revenue|sales|income)?\s*(20\d{2})\s*(?:vs|v\.?|and|with)\s*(20\d{2})",re.IGNORECASE)
             }
 
         # map common short names/aliases -> canonical country name as in your CSV
@@ -172,7 +175,7 @@ class QAPrototype:
             m = pat.search(q)
             if m:
                 print(f"Matched regex → {cat}")
-                if cat in ("compare_total", "compare_monthly"):
+                if cat in ("compare_total", "compare_monthly","compare_years"):
                     return "compare", "regex", cat, m
                 else:
                     return regex_to_meta.get(cat, cat), "regex", None, m
@@ -526,40 +529,6 @@ class QAPrototype:
         else:
             print("⚠️ Unknown comparison intent.")
             return True
-
-    def display(self, category, query=None):
-        print(f"\n🔎 Query: {query}")
-        meta = self.metadata[category]
-        df = self.load_csv(category)
-        
-        # Determine top N 
-        n = self.extract_top_n(query) if meta["top_n"] and query else None
-        
-        # Routes to handlers
-        if category in ["customers"]:
-            # Single value summary
-            self.handle_single_value(meta, df, query)
-        
-        elif category == "revenue":
-            if not self.handle_revenue(query):
-                self.handle_single_value(meta, df)
-
-
-        elif category in ["countries", "products"]:
-            # top N list
-            if category == "products" and self.handle_products_in_country(query, n):
-                return
-            self.handle_topn(category, meta, df, query, n)
-
-        elif category == "monthly_revenue":
-            # trend/ timeseries
-            self.handle_trend(category, meta, df)
-        elif category == "transactions":
-            if not self.handle_transactions_in_country(query, n):
-                self.handle_topn(category, meta, df, query, n)
-        else:
-            # fallback
-            self.fallback_response()
     
     # Handlers
     def handle_single_value(self, meta, df, query=None):
@@ -618,6 +587,81 @@ class QAPrototype:
                             meta["chart_type"],
                             top_n=False)
     
+    def handle_trend_comparison(self,query:str):
+        """Compare revenue trends between two years or months."""
+        df = self.df_monthly.copy()
+        df["YearMonth"] = df["YearMonth"].astype(str)
+        df["Revenue"] = df["Revenue"].astype(float)
+
+        # Extract years and months
+        years = re.findall(r"\b(20\d\d)\b", query)
+        months = re.findall(r"\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\w*\b", query, re.IGNORECASE)
+        print(years, months)
+
+        if len(years) >= 2:
+            year1, year2 = years[0], years[1]
+            df["Year"] = df["YearMonth"].str[:4]
+            df1 = df[df["Year"] == year1]
+            df2 = df[df["Year"] == year2]
+            
+            total1, total2 = df1["Revenue"].sum(), df2["Revenue"].sum()
+            growth = (((total2- total1)/total1) * 100) if total1 > 0 else 0
+
+            print(f"\nRevenue Comparison: {year1} vs {year2}")
+            print(f"{year1}: ₹{total1:,.2f}")
+            print(f"{year2}: ₹{total2:,.2f}")
+            print(f"Growth: {growth:.2f}%")
+
+            plt.figure(figsize=(8,4))
+            plt.plot(df1['YearMonth'], df1['Revenue'], label=year1)
+            plt.plot(df2['YearMonth'], df2['Revenue'], label=year2)
+            plt.title(f"Revenue Trend Comparison: {year1} vs {year2}")
+            plt.xlabel("Month")
+            plt.ylabel("Revenue")
+            plt.xticks(rotation=45)
+            plt.legend()
+            plt.tight_layout()
+            plt.show()
+
+        elif len(months) >= 2:
+            print("Month comparison not implemented yet")
+        else:
+            print("No valid years or months found in query.")
+    
+    def display(self, category, query=None):
+        print(f"\n🔎 Query: {query}")
+        meta = self.metadata[category]
+        df = self.load_csv(category)
+        
+        # Determine top N 
+        n = self.extract_top_n(query) if meta["top_n"] and query else None
+        
+        # Routes to handlers
+        if category in ["customers"]:
+            # Single value summary
+            self.handle_single_value(meta, df, query)
+        
+        elif category == "revenue":
+            if not self.handle_revenue(query):
+                self.handle_single_value(meta, df)
+
+
+        elif category in ["countries", "products"]:
+            # top N list
+            if category == "products" and self.handle_products_in_country(query, n):
+                return
+            self.handle_topn(category, meta, df, query, n)
+
+        elif category == "monthly_revenue":
+            # trend/ timeseries
+            self.handle_trend(category, meta, df)
+        elif category == "transactions":
+            if not self.handle_transactions_in_country(query, n):
+                self.handle_topn(category, meta, df, query, n)
+        else:
+            # fallback
+            self.fallback_response()
+    
     def fallback_response(self):
         print("Sorry, I don’t know how to answer that yet.")
         print("Try asking about customers, revenue, countries, products, transactions, or monthly trends.")
@@ -653,7 +697,12 @@ class QAPrototype:
                 print(matched_by)
 
                 if cat == "compare":
-                    self.handle_comparison(query, intent_match)
+                    # Detect if it's a year-based trend comparison
+                    if re.search(r"20\d{2}\s*(?:vs|v\.?|and|with)\s*20\d{2}", query, re.IGNORECASE):
+                        print("Detected year-based trend comparison")
+                        self.handle_trend_comparison(query)
+                    else:
+                        self.handle_comparison(query, intent_match)
                     self.log_query(query, cat, status="success", matched_by=matched_by, exec_time_ms = (time.time() - start) * 1000)
                     continue
 
@@ -691,6 +740,21 @@ class QAPrototype:
                 self.log_query(query, category=cat if 'cat' in locals() else None,
                                status=str(e),
                                exec_time_ms=(time.time() - start) * 1000)
+                
+    # def get_reponse(self, query:str):
+    #     """Unified interface for UI or API"""
+    #     buffer = StringIO()
+    #     sys.stdout = buffer
+    #     try:
+    #         self.run_single_query(query)
+    #     except Exception as e:
+    #         print("Error:", e)
+    #     finally:
+    #         sys.stdout = sys.__stdout__
+    #     return buffer.getvalue()
+    
+    # def run_single_query(self, query:str):
+
 
 if __name__ == "__main__":
     qa = QAPrototype(summary_folder="data/processed")

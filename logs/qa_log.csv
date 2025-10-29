@@ -219,3 +219,16 @@ timestamp,query,category,status,rows,plot,matched_by,exec_time_ms
 2025-10-29 00:00:46,monthly sales chart for 2010,monthly_revenue,success,,no,, 6213.25
 2025-10-29 00:00:57,monthly sales chart for 2011,monthly_revenue,success,,no,, 4799.14
 2025-10-29 00:01:11,revenue over time,monthly_revenue,success,,no,, 139.11
+2025-10-29 23:19:46,compare 2023 vs 2024,,'NoneType' object has no attribute 'group',,no,, 3.90
+2025-10-29 23:22:38,compare 2023 vs 2024,compare,unbalanced parenthesis at position 56,,no,, 3.13
+2025-10-29 23:27:29,compare 2023 vs 2024,compare,unbalanced parenthesis at position 56,,no,, 2.03
+2025-10-30 00:04:53,compare 2023 vs 2024,compare,unbalanced parenthesis at position 56,,no,, 1.81
+2025-10-30 00:05:49,compare 2023 vs 2024,compare,unbalanced parenthesis at position 56,,no,, 1.92
+2025-10-30 00:08:20,compare 2023 vs 2024,compare,success,,no,regex, 4447.97
+2025-10-30 00:08:38,compare 2023 vs 2011[d[d[c,compare,success,,no,regex, 10810.64
+2025-10-30 00:08:55,[?1;2ccompare 2011 vs 2012,compare,success,,no,regex, 6508.50
+2025-10-30 00:09:23,compare 2023 vs 2011,compare,success,,no,regex, 4700.76
+2025-10-30 00:10:03,compare revenue 2010 vs 2011,revenue,'NoneType' object has no attribute 'group',,no,, 3.82
+2025-10-30 00:11:46,compare 2010 vs 2011,compare,success,,no,regex, 12823.13
+2025-10-30 00:14:19,compare 2010 vs 2011,compare,success,,no,regex, 3127.28
+2025-10-30 00:15:59,compare revenue 2010 vs 2012,compare,success,,no,regex, 6604.66
