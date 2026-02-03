@@ -1,4 +1,4 @@
-# Chat With Your Data 🤖📊  
+# Chat With Your Data 
 
 Have you ever looked at a messy sales Excel file and wished you could just *ask it a question* like:  
 > "What were my top 5 products last month?"  
@@ -9,7 +9,7 @@ I built an **AI-powered data pipeline** that turns raw sales data into clean tab
 
 ---
 
-## ✨ What it Does
+## What it Does
 - Load raw CSV sales data into a local database (DuckDB).  
 - Clean and organize the data with **dbt** (think "data modeling for analytics").  
 - Ask questions in natural language → AI converts them into SQL queries.  
@@ -17,7 +17,7 @@ I built an **AI-powered data pipeline** that turns raw sales data into clean tab
 
 ---
 
-## 🛠️ Tech Behind It
+## Tech Behind It
 - **DuckDB** → lightweight, free database (like SQLite but built for analytics).  
 - **dbt** → transformations + tests to make data reliable.  
 - **LangChain + Hugging Face** → LLM agent that turns text → SQL.  
@@ -25,7 +25,7 @@ I built an **AI-powered data pipeline** that turns raw sales data into clean tab
 
 ---
 
-## 🚀 How to Try It
+## How to Try It
 1. Clone this repo & install requirements:
    ```bash
    git clone https://github.com/your-username/chat-with-your-data.git
@@ -39,3 +39,13 @@ I built an **AI-powered data pipeline** that turns raw sales data into clean tab
    streamlit run app.py
 
 
+## Use Cases
+
+### 1. Automated Data Exploration
+This system analyzes CSV data and answers exploratory questions such as trends, distributions, and summaries, generating graphs automatically.
+
+### 2. Comparative Analysis
+The system compares different columns or categories within CSV data and visualizes differences to help identify insights.
+
+### 3. Natural-Language Question Answering on CSV Data
+Users can ask ad-hoc analytical questions in plain English and receive insights with visual output, without writing SQL or code.
