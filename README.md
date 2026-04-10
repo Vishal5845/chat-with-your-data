@@ -22,10 +22,6 @@ chat-with-your-data/
 - Revenue trends
 - Customer purchase behavior
 
-**Histograms of RFM Metrics:**
-
-![RFM Histograms](reports/rfm_histograms.png)
-
 ---
 
 ## 👥 Customer Segmentation (RFM Analysis)
@@ -35,10 +31,6 @@ We segmented customers into groups such as:
 - **Lost** (haven’t purchased recently)
 - **Potential** (recently active, but not yet frequent)
 - **Others**
-
-**Customer Segment Distribution:**
-
-![Customer Segments](reports/rfm_segments_distribution.png)
 
 ---
 
