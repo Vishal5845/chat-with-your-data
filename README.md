@@ -76,6 +76,6 @@ virtual\Scripts\activate      # (Windows)
 # Install dependencies
 pip install -r requirements.txt
 
-# Run EDA
-python src/eda.py
+# Run Prototype
+python src/qa_prototype.py
 
